@@ -15,4 +15,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Unitable.Entities\Unitable.Entities.csproj" />
+  </ItemGroup>
+
 </Project>
