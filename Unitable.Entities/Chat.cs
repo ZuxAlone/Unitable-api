@@ -10,7 +10,5 @@ namespace Unitable.Entities
     {
         public string Detalle { get; set; }
         public int CantMensajes { get; set; }
-
-        public List<Mensaje> Mensajes { get; set; }
     }
 }

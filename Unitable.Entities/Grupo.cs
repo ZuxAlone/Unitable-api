@@ -18,7 +18,5 @@ namespace Unitable.Entities
 
         public Tema Tema { get; set; }
         public Chat Chat { get; set; }
-
-        public List<Usuario> Usuarios { get; set; }
     }
 }

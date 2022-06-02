@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unitable.DataAccess;
 
@@ -11,9 +12,10 @@ using Unitable.DataAccess;
 namespace Unitable.DataAccess.Migrations
 {
     [DbContext(typeof(UnitableDbContext))]
-    partial class UnitableDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220602191219_UpdateClasses")]
+    partial class UpdateClasses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

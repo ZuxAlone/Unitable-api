@@ -29,12 +29,7 @@ namespace Unitable.Entities
         public int NumMonedas { get; set; }
         public bool IsPremium { get; set; }
         [Required]
+        [EnumDataType(typeof(TipoUsuario))]
         public TipoUsuario Tipo { get; set; }
-
-        public List<Actividad> Actividades { get; set; }
-        public List<Recompensa> Recompensas { get; set; }
-        public List<Usuario> Follows { get; set; }
-        public List<Grupo> Grupos { get; set; }
-        public List<Mensaje> Mensajes { get; set; }
     }
 }
