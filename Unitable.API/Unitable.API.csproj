@@ -18,10 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Unitable.DataAccess\Unitable.DataAccess.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controller\" />
+    <ProjectReference Include="..\Unitable.Dto\Unitable.Dto.csproj" />
+    <ProjectReference Include="..\Unitable.Entities\Unitable.Entities.csproj" />
   </ItemGroup>
 
 </Project>
