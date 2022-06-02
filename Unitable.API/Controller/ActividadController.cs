@@ -81,7 +81,7 @@ namespace Unitable.API.Controller
             return Ok(entity);
         }
 
-        [HttpPut]
+        [HttpPut("edit/")]
         public async Task<ActionResult> Edit(int actividadId, DtoActividad request)
         {
             var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
@@ -104,21 +104,21 @@ namespace Unitable.API.Controller
             return (ActionResult)Results.NoContent();
         }
 
-        //[HttpPut]
-        //public async Task<ActionResult> Finish(int actividadId)
-        //{
-        //    var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
+        [HttpPut("finish/")]
+        public async Task<ActionResult> Finish(int actividadId)
+        {
+            var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
 
-        //    if (actividadFromDb == null) return (ActionResult)Results.NotFound();
+            if (actividadFromDb == null) return (ActionResult)Results.NotFound();
 
-        //    actividadFromDb.Activa = false;
+            actividadFromDb.Activa = false;
 
-        //    _context.Actividades.Update(actividadFromDb);
-        //    await _context.SaveChangesAsync();
+            _context.Actividades.Update(actividadFromDb);
+            await _context.SaveChangesAsync();
 
-        //    HttpContext.Response.Headers.Add("location", $"/api/actividad/finish/{actividadFromDb.Id}");
+            HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
 
-        //    return (ActionResult)Results.NoContent();
-        //}
+            return (ActionResult)Results.NoContent();
+        }
     }
 }
