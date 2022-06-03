@@ -51,11 +51,11 @@ namespace Unitable.API.Controller
                 DuracionMin = Math.Round(dif.TotalMinutes, 0),
                 Activa = true,
 
-                // Falta el UsuarioId
-                // Falta el TemaId
+                UsuarioId = request.UsuarioId,
+                TemaId = request.TemaId,
 
-                // Falta el Usuario
-                // Falta el Tema
+                Usuario = await _context.Usuarios.FindAsync(request.UsuarioId),
+                Tema = await _context.Temas.FindAsync(request.TemaId),
 
                 Status = true
             };
@@ -73,7 +73,7 @@ namespace Unitable.API.Controller
         {
             var entity = await _context.Actividades.FindAsync(actividadId);
 
-            if (entity == null) return (ActionResult)Results.NotFound();
+            if (entity == null) return NotFound();
 
             _context.Actividades.Remove(entity);
             await _context.SaveChangesAsync();
@@ -81,12 +81,12 @@ namespace Unitable.API.Controller
             return Ok(entity);
         }
 
-        [HttpPut("edit/")]
-        public async Task<ActionResult> Edit(int actividadId, DtoActividad request)
+        [HttpPut("{actividadId:int}")]
+        public async Task<ActionResult> Put(int actividadId, DtoActividad request)
         {
             var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
 
-            if (actividadFromDb == null) return (ActionResult)Results.NotFound();
+            if (actividadFromDb == null) return NotFound();
 
             TimeSpan dif = request.HoraFin - request.HoraIni;
 
@@ -101,15 +101,15 @@ namespace Unitable.API.Controller
 
             HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
 
-            return (ActionResult)Results.NoContent();
+            return Ok(new { Id = actividadId });
         }
 
-        [HttpPut("finish/")]
+        [HttpPut("finish/{actividadId:int}")]
         public async Task<ActionResult> Finish(int actividadId)
         {
             var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
 
-            if (actividadFromDb == null) return (ActionResult)Results.NotFound();
+            if (actividadFromDb == null) return NotFound();
 
             actividadFromDb.Activa = false;
 
@@ -118,7 +118,7 @@ namespace Unitable.API.Controller
 
             HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
 
-            return (ActionResult)Results.NoContent();
+            return Ok(new { Id = actividadId });
         }
     }
 }
