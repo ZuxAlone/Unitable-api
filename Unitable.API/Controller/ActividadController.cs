@@ -4,6 +4,7 @@ using Unitable.DataAccess;
 using Unitable.Dto.Response;
 using Unitable.Dto.Request;
 using Unitable.Entities;
+using System.Security.Claims;
 
 namespace Unitable.API.Controller
 {
@@ -119,6 +120,14 @@ namespace Unitable.API.Controller
             HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
 
             return Ok(new { Id = actividadId });
+        }
+
+        private Usuario GetUserPrincipal()
+        {
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            var correo = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
+            var usuario = _context.Usuarios.FirstOrDefault(user => user.Correo == correo);
+            return usuario;
         }
     }
 }

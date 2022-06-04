@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
@@ -89,6 +90,14 @@ namespace Unitable.API.Controller
             HttpContext.Response.Headers.Add("location", $"/api/Mensaje/{MensajeFromDb.Id}");
 
             return Ok(new { Id = MensajeId });
+        }
+
+        private Usuario GetUserPrincipal()
+        {
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            var correo = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
+            var usuario = _context.Usuarios.FirstOrDefault(user => user.Correo == correo);
+            return usuario;
         }
     }
 }
