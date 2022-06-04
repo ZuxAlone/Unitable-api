@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Unitable.DataAccess;
@@ -88,6 +89,32 @@ namespace Unitable.API.Controller
             HttpContext.Response.Headers.Add("location", $"/api/Recompensa/{RecompensaFromDb.Id}");
 
             return Ok(new { Id = RecompensaId });
+        }
+
+        [HttpPost("buy/{recompensaId:int}")]
+        [Authorize]
+        public async Task<ActionResult<Usuario_Recompensa>> BuyRecompensa(int recompensaId)
+        {
+            var userPrincipal = GetUserPrincipal();
+
+            var recompensaDb = await _context.Recompensas.FindAsync(recompensaId);
+
+            if (recompensaDb == null) return NotFound(new { mensaje = "No existe esta recompensa" });
+            if (userPrincipal.NumMonedas < recompensaDb.PrecioMon) return Problem("No tienes monedas suficientes");
+
+            var usuario_recompensa = new Usuario_Recompensa
+            {
+                UsuarioId = userPrincipal.Id,
+                RecompensaId = recompensaId,
+                Usuario = userPrincipal,
+                Recompensa = recompensaDb,
+                Status = true
+            };
+
+            _context.Usuario_Recompensas.Add(usuario_recompensa);
+            await _context.SaveChangesAsync();
+
+            return Ok(usuario_recompensa);
         }
 
         private Usuario GetUserPrincipal()

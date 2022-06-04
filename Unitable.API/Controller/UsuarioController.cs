@@ -67,12 +67,12 @@ namespace Unitable.API.Controller
             var generatedToken = _tokenService.BuildToken(_configuration["Jwt:Key"].ToString(), _configuration["Jwt:Issuer"].ToString(), request);
             return Ok(new
             {
-                token = generatedToken,
-                usuario = usuario
+                usuario = usuario,
+                token = generatedToken
             });
         }
 
-        [HttpGet("/current")]
+        [HttpGet]
         [Authorize]
         public async Task<ActionResult<Usuario>> GetCurrentUsuario()
         {
@@ -80,7 +80,7 @@ namespace Unitable.API.Controller
             return Ok(usuario);
         }
 
-        [HttpGet]
+        [HttpGet("usuarios/")]
         [Authorize]
         public async Task<ActionResult<IObservable<Usuario>>> GetUsuarios()
         {
@@ -93,6 +93,58 @@ namespace Unitable.API.Controller
             {
                 return Problem(ex.Message);
             }
+        }
+
+        [HttpPut]
+        [Authorize]
+        public async Task<ActionResult<Usuario>> EditUsuario(DtoEditUsuario request)
+        {
+            var userPrincipal = GetUserPrincipal();
+
+            userPrincipal.Nombres = request.Nombres;
+            userPrincipal.Apellidos = request.Apellidos;
+            userPrincipal.Carrera = request.Carrera;
+            userPrincipal.Tipo = request.Tipo;
+
+            _context.Usuarios.Update(userPrincipal);
+            await _context.SaveChangesAsync();
+
+            return Ok(userPrincipal);
+        }
+
+        [HttpPut("premium/")]
+        [Authorize]
+        public async Task<ActionResult> GetPremium()
+        {
+            var userPrincipal = GetUserPrincipal();
+
+            if (userPrincipal.IsPremium) userPrincipal.IsPremium = false;
+            else userPrincipal.IsPremium = true;
+
+            _context.Usuarios.Update(userPrincipal);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                premium = userPrincipal.IsPremium,
+                mensaje = "Has cambiado tu suscripción!"
+            });
+        }
+
+        [HttpDelete]
+        [Authorize]
+        public async Task<ActionResult> DeleteUsuario()
+        {
+            var userPrincipal = GetUserPrincipal();
+
+            _context.Usuarios.Remove(userPrincipal);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                usuario = userPrincipal,
+                mensaje = "Usuario Eliminado"
+            });
         }
 
         private Usuario GetUserPrincipal()
