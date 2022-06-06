@@ -5,6 +5,7 @@ using Unitable.Dto.Response;
 using Unitable.Dto.Request;
 using Unitable.Entities;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Unitable.API.Controller
 {
@@ -39,34 +40,100 @@ namespace Unitable.API.Controller
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult> Post(DtoActividad request)
         {
+            var userPrincipal = GetUserPrincipal();
+
             TimeSpan dif = request.HoraFin - request.HoraIni;
-            var entity = new Actividad
+            if (dif.TotalMinutes < 0) return Problem("La fecha inicial tiene que ser antes que la fecha final");
+            if (request.HoraFin == request.HoraIni) return Problem("La fecha inicial y final tienen que ser diferentes");
+
+            if(_context.Actividades.Count() > 0)
             {
-                Nombre = request.Nombre,
-                Detalle = request.Detalle,
-                HoraIni = request.HoraIni,
-                HoraFin = request.HoraFin,
+                var coincidencias_igual = await _context.Actividades.Where(us => (DateTime.Compare(us.HoraIni,request.HoraIni) == 0 && DateTime.Compare(us.HoraFin,request.HoraFin) == 0)).ToListAsync();
+                var coincidencias_contenido = await _context.Actividades.Where(us => (DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0)).ToListAsync();
+                var coincidencias_conteniendo = await _context.Actividades.Where(us => (DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0)).ToListAsync();
 
-                DuracionMin = Math.Round(dif.TotalMinutes, 0),
-                Activa = true,
+                if (coincidencias_igual.Count() == 0)
+                {
+                    if (coincidencias_contenido.Count() == 0)
+                    {
+                        if (coincidencias_conteniendo.Count() == 0)
+                        {
+                            var entity = new Actividad
+                            {
+                                Nombre = request.Nombre,
+                                Detalle = request.Detalle,
+                                HoraIni = request.HoraIni,
+                                HoraFin = request.HoraFin,
 
-                UsuarioId = request.UsuarioId,
-                TemaId = request.TemaId,
+                                DuracionMin = Math.Round(dif.TotalMinutes, 0),
+                                Activa = true,
 
-                Usuario = await _context.Usuarios.FindAsync(request.UsuarioId),
-                Tema = await _context.Temas.FindAsync(request.TemaId),
+                                UsuarioId = userPrincipal.Id,
+                                TemaId = request.TemaId,
 
-                Status = true
-            };
+                                Usuario = userPrincipal,
+                                Tema = await _context.Temas.FindAsync(request.TemaId),
 
-            _context.Actividades.Add(entity);
-            await _context.SaveChangesAsync();
+                                Status = true
+                            };
 
-            HttpContext.Response.Headers.Add("location", $"/api/actividad/{entity.Id}");
+                            userPrincipal.NumMonedas = userPrincipal.NumMonedas + 30;
 
-            return Ok(entity);
+                            _context.Actividades.Add(entity);
+                            await _context.SaveChangesAsync();
+
+                            HttpContext.Response.Headers.Add("location", $"/api/actividad/{entity.Id}");
+
+                            return Ok(entity);
+                        }
+                        else
+                        {
+                            return Problem("Ya tiene una actividad dentro de este horario");
+                        }
+                    }
+                    else
+                    {
+                        return Problem("No se puede llevar una actividad dentro del horario de otra actividad");
+                    }
+                }
+                else
+                {
+                    return Problem("No se pueden llevar 2 actividades en el mismo horario");
+                }
+            }
+            else
+            {
+                var entity = new Actividad
+                {
+                    Nombre = request.Nombre,
+                    Detalle = request.Detalle,
+                    HoraIni = request.HoraIni,
+                    HoraFin = request.HoraFin,
+
+                    DuracionMin = Math.Round(dif.TotalMinutes, 0),
+                    Activa = true,
+
+                    UsuarioId = userPrincipal.Id,
+                    TemaId = request.TemaId,
+
+                    Usuario = userPrincipal,
+                    Tema = await _context.Temas.FindAsync(request.TemaId),
+
+                    Status = true
+                };
+
+                userPrincipal.NumMonedas = userPrincipal.NumMonedas + 30;
+
+                _context.Actividades.Add(entity);
+                await _context.SaveChangesAsync();
+
+                HttpContext.Response.Headers.Add("location", $"/api/actividad/{entity.Id}");
+
+                return Ok(entity);
+            }  
         }
 
         [HttpDelete]
@@ -106,8 +173,11 @@ namespace Unitable.API.Controller
         }
 
         [HttpPut("finish/{actividadId:int}")]
+        [Authorize]
         public async Task<ActionResult> Finish(int actividadId)
         {
+            var userPrincipal = GetUserPrincipal();
+
             var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
 
             if (actividadFromDb == null) return NotFound();
@@ -115,7 +185,6 @@ namespace Unitable.API.Controller
             actividadFromDb.Activa = false;
 
             _context.Actividades.Update(actividadFromDb);
-            await _context.SaveChangesAsync();
 
             HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
 
@@ -127,7 +196,21 @@ namespace Unitable.API.Controller
 
             var test = tests[r];
 
+            userPrincipal.NumActCompletas = userPrincipal.NumActCompletas + 1;
+
+            await _context.SaveChangesAsync();
+
             return Ok(test);
+        }
+
+        [HttpGet("actividades")]
+        [Authorize]
+        public async Task<ActionResult<Actividad>> GetActividadesByUsuario()
+        {
+            var userPrincipal = GetUserPrincipal();
+            var mis_Actividades = await _context.Actividades.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
+
+            return Ok(mis_Actividades);
         }
 
         private Usuario GetUserPrincipal()

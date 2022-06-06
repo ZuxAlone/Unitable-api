@@ -6,7 +6,6 @@
         public string Detalle { get; set; }
         public DateTime HoraIni { get; set; }
         public DateTime HoraFin { get; set; }
-        public int UsuarioId { get; set; }
         public int TemaId { get; set; }
     }
 }
