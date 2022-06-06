@@ -21,21 +21,24 @@ namespace Unitable.API.Controller
         }
 
         [HttpGet]
-        public async Task<ActionResult<BaseResponseGeneric<ICollection<Recompensa>>>> Get()
+        public async Task<ActionResult<Recompensa>> Get()
         {
-            var response = new BaseResponseGeneric<ICollection<Recompensa>>();
+            var userPrincipal = GetUserPrincipal();
+            var usuario_recompesas = await _context.Usuario_Recompensas.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
 
-            try
+            List<Recompensa> recompensas = new List<Recompensa>();
+            List<Recompensa> recompensasnot = new List<Recompensa>();
+
+            recompensasnot = _context.Recompensas.ToList();
+
+            foreach (var usuario_recompesa in usuario_recompesas)
             {
-                response.Result = await _context.Recompensas.ToListAsync();
-                response.Success = true;
-                return Ok(response);
+                recompensas.Add(await _context.Recompensas.FindAsync(usuario_recompesa.RecompensaId));
             }
-            catch (Exception ex)
-            {
-                response.Errors.Add(ex.Message);
-                return response;
-            }
+
+            recompensasnot = recompensasnot.Except(recompensas).ToList();
+
+            return Ok(recompensasnot);
 
         }
 
@@ -64,7 +67,16 @@ namespace Unitable.API.Controller
         {
             var entity = await _context.Recompensas.FindAsync(RecompensaId);
 
+
             if (entity == null) return NotFound();
+
+            foreach (Usuario_Recompensa element in _context.Usuario_Recompensas)
+            {
+                if (element.RecompensaId == RecompensaId)
+                {
+                    _context.Usuario_Recompensas.Remove(element);
+                }
+            }
 
             _context.Recompensas.Remove(entity);
             await _context.SaveChangesAsync();
@@ -115,6 +127,25 @@ namespace Unitable.API.Controller
             await _context.SaveChangesAsync();
 
             return Ok(usuario_recompensa);
+        }
+
+        [HttpGet("recompesas")]
+        [Authorize]
+        public async Task<ActionResult<Usuario>> GetRecompensasByUsuario()
+        {
+            
+            var userPrincipal = GetUserPrincipal();
+            var usuario_recompesas =await _context.Usuario_Recompensas.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
+
+            List<Recompensa> recompensas = new List<Recompensa>();
+
+            foreach(var usuario_recompesa in usuario_recompesas)
+            {
+                recompensas.Add(await _context.Recompensas.FindAsync(usuario_recompesa.RecompensaId));
+            }
+
+            return Ok(recompensas);
+
         }
 
         private Usuario GetUserPrincipal()

@@ -119,7 +119,15 @@ namespace Unitable.API.Controller
 
             HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
 
-            return Ok(new { Id = actividadId });
+            var tests =  await _context.Tests.Where(us => (us.TemaId == actividadFromDb.TemaId)).ToListAsync();
+
+            Random randomm = new Random();
+
+            int r = randomm.Next(0, tests.Count);
+
+            var test = tests[r];
+
+            return Ok(test);
         }
 
         private Usuario GetUserPrincipal()
