@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
@@ -89,6 +91,39 @@ namespace Unitable.API.Controller
             HttpContext.Response.Headers.Add("location", $"/api/Test/{TestFromDb.Id}");
 
             return Ok(new { Id = TestId });
+        }
+
+        [HttpPost("resultado")]
+        [Authorize]
+        public async Task<ActionResult<List<DtoRespuesta>>> TestResultado(List<DtoRespuesta> request)
+        {
+            int c = 0;
+            foreach(DtoRespuesta respuesta in request)
+            {
+                if(respuesta.IsCorrect == true) { c++; }
+            }
+
+            double percentcorrect = ((double)c / (double)request.Count())*100.00;
+            var userPrincipal = GetUserPrincipal();
+
+            if (percentcorrect > 75)
+            {
+                userPrincipal.NumTestAprobados = userPrincipal.NumTestAprobados + 1;
+                userPrincipal.NumMonedas = userPrincipal.NumMonedas + 20;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { mensaje = "Tienes un " + percentcorrect.ToString() + "% de respuestas correctas."});
+
+        }
+
+        private Usuario GetUserPrincipal()
+        {
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            var correo = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
+            var usuario = _context.Usuarios.FirstOrDefault(user => user.Correo == correo);
+            return usuario;
         }
     }
 }
