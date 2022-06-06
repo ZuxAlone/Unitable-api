@@ -9,7 +9,6 @@ namespace Unitable.Dto.Request
     public class DtoMensaje
     {
         public string MensajeTexto { get; set; }
-        public int UsuarioId { get; set; }
         public int ChatId { get; set; }
     }
 }

@@ -14,9 +14,9 @@ namespace Unitable.Entities
         public int NumUsuarios { get; set; }
 
         public int TemaId { get; set; }
-        public int ChatId { get; set; }
-
         public Tema Tema { get; set; }
+        public int ChatId { get; set; }
         public Chat Chat { get; set; }
+
     }
 }

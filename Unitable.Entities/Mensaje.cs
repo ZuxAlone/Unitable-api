@@ -12,9 +12,9 @@ namespace Unitable.Entities
         public DateTime HoraMensaje { get; set; }
 
         public int UsuarioId { get; set; }
-        public int ChatId { get; set; }
-
         public Usuario Usuario { get; set; }
+
+        public int ChatId { get; set; }
         public Chat Chat { get; set; }
     }
 }

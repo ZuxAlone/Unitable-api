@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Unitable.DataAccess;
@@ -20,13 +21,16 @@ namespace Unitable.API.Controller
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<BaseResponseGeneric<ICollection<Grupo>>>> Get()
         {
             var response = new BaseResponseGeneric<ICollection<Grupo>>();
-
+            var userPrincipal = GetUserPrincipal();
             try
             {
-                response.Result = await _context.Grupos.ToListAsync();
+                var usuarioGrupo = await _context.Usuario_Grupos.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
+                var indexGrupos = usuarioGrupo.Select(ug => ug.GrupoId).ToList();
+                response.Result = await _context.Grupos.Where(gr => indexGrupos.Contains(gr.Id)).ToListAsync();
                 response.Success = true;
                 return Ok(response);
             }
@@ -35,12 +39,13 @@ namespace Unitable.API.Controller
                 response.Errors.Add(ex.Message);
                 return response;
             }
-
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult> Post(DtoGrupo request)
         {
+            var usuarioPrincipal = GetUserPrincipal();
             var TemaFromDb = await _context.Temas.FindAsync(request.TemaId);
 
             var entityChat = new Chat
@@ -72,12 +77,25 @@ namespace Unitable.API.Controller
             _context.Grupos.Add(entity);
             await _context.SaveChangesAsync();
 
+            var usuario_grupo = new Usuario_Grupo
+            {
+                UsuarioId = usuarioPrincipal.Id,
+                Usuario = usuarioPrincipal,
+
+                GrupoId = entity.Id,
+                Grupo = entity
+            };
+            _context.Usuario_Grupos.Add(usuario_grupo);
+
+            await _context.SaveChangesAsync();
+
             HttpContext.Response.Headers.Add("location", $"/api/Grupo/{entity.Id}");
 
             return Ok(entity);
         }
 
         [HttpDelete]
+        [Authorize]
         public async Task<ActionResult> Delete(int GrupoId)
         {
             var entity = await _context.Grupos.FindAsync(GrupoId);
@@ -91,7 +109,37 @@ namespace Unitable.API.Controller
             return Ok(entity);
         }
 
+        [HttpPost("Join/{GrupoId:int}")]
+        [Authorize]
+        public async Task<ActionResult> JoinGrupo(int GrupoId)
+        {
+            var userPrincipal = GetUserPrincipal();
+
+            var grupo = _context.Grupos.FirstOrDefault(gr => gr.Id == GrupoId);
+            if (grupo == null)
+                return NotFound("Grupo #" + GrupoId + " No Existe");
+            
+            var usuarioGrupo = await _context.Usuario_Grupos.FirstOrDefaultAsync(us => (us.GrupoId == GrupoId && us.UsuarioId == userPrincipal.Id));
+            
+            if (usuarioGrupo != null)
+                return BadRequest("Usuario #" + userPrincipal.Id + " Ya se encuentra en el grupo #" + GrupoId);
+
+            usuarioGrupo = new Usuario_Grupo
+            {
+                UsuarioId = userPrincipal.Id,
+                Usuario = userPrincipal,
+                GrupoId = grupo.Id,
+                Grupo = grupo
+            };
+
+            _context.Usuario_Grupos.Add(usuarioGrupo);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Id = GrupoId });
+        }
+
         [HttpPut("{GrupoId:int}")]
+        [Authorize]
         public async Task<ActionResult> Put(int GrupoId, DtoGrupo request)
         {
             var GrupoFromDb = await _context.Grupos.FindAsync(GrupoId);
