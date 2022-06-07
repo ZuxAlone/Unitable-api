@@ -51,9 +51,10 @@ namespace Unitable.API.Controller
 
             if(_context.Actividades.Count() > 0)
             {
-                var coincidencias_igual = await _context.Actividades.Where(us => (DateTime.Compare(us.HoraIni,request.HoraIni) == 0 && DateTime.Compare(us.HoraFin,request.HoraFin) == 0)).ToListAsync();
-                var coincidencias_contenido = await _context.Actividades.Where(us => (DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0)).ToListAsync();
-                var coincidencias_conteniendo = await _context.Actividades.Where(us => (DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0)).ToListAsync();
+                var coincidencias_igual = await _context.Actividades.Where(us => (us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni,request.HoraIni) == 0 && DateTime.Compare(us.HoraFin,request.HoraFin) == 0)).ToListAsync();
+                var coincidencias_contenido = await _context.Actividades.Where(us => (us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0 || us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) == 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0 || us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) == 0)).ToListAsync();
+                var coincidencias_conteniendo = await _context.Actividades.Where(us => (us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0 || us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) == 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0 || us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) == 0)).ToListAsync();
+                var coincidencias_cruce = await _context.Actividades.Where(us => (us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0 && DateTime.Compare(us.HoraIni, request.HoraFin) < 0 || us.UsuarioId == userPrincipal.Id && DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0 && DateTime.Compare(us.HoraFin, request.HoraIni) > 0)).ToListAsync();
 
                 if (coincidencias_igual.Count() == 0)
                 {
@@ -61,31 +62,38 @@ namespace Unitable.API.Controller
                     {
                         if (coincidencias_conteniendo.Count() == 0)
                         {
-                            var entity = new Actividad
+                            if(coincidencias_cruce.Count() == 0)
                             {
-                                Nombre = request.Nombre,
-                                Detalle = request.Detalle,
-                                HoraIni = request.HoraIni,
-                                HoraFin = request.HoraFin,
+                                var entity = new Actividad
+                                {
+                                    Nombre = request.Nombre,
+                                    Detalle = request.Detalle,
+                                    HoraIni = request.HoraIni,
+                                    HoraFin = request.HoraFin,
 
-                                DuracionMin = Math.Round(dif.TotalMinutes, 0),
-                                Activa = true,
+                                    DuracionMin = Math.Round(dif.TotalMinutes, 0),
+                                    Activa = true,
 
-                                UsuarioId = userPrincipal.Id,
-                                TemaId = request.TemaId,
+                                    UsuarioId = userPrincipal.Id,
+                                    TemaId = request.TemaId,
 
-                                Usuario = userPrincipal,
-                                Tema = await _context.Temas.FindAsync(request.TemaId),
+                                    Usuario = userPrincipal,
+                                    Tema = await _context.Temas.FindAsync(request.TemaId),
 
-                                Status = true
-                            };
+                                    Status = true
+                                };
 
-                            _context.Actividades.Add(entity);
-                            await _context.SaveChangesAsync();
+                                _context.Actividades.Add(entity);
+                                await _context.SaveChangesAsync();
 
-                            HttpContext.Response.Headers.Add("location", $"/api/actividad/{entity.Id}");
+                                HttpContext.Response.Headers.Add("location", $"/api/actividad/{entity.Id}");
 
-                            return Ok(entity);
+                                return Ok(entity);
+                            }
+                            else
+                            {
+                                return Problem("Este horario se cruza con otro horario");
+                            }
                         }
                         else
                         {
@@ -153,19 +161,55 @@ namespace Unitable.API.Controller
             if (actividadFromDb == null) return NotFound();
 
             TimeSpan dif = request.HoraFin - request.HoraIni;
+            if (dif.TotalMinutes < 0) return Problem("La fecha inicial tiene que ser antes que la fecha final");
+            if (request.HoraFin == request.HoraIni) return Problem("La fecha inicial y final tienen que ser diferentes");
 
-            actividadFromDb.Nombre = request.Nombre;
-            actividadFromDb.Detalle = request.Detalle;
-            actividadFromDb.HoraIni = request.HoraIni;
-            actividadFromDb.HoraFin = request.HoraFin;
-            actividadFromDb.DuracionMin = Math.Round(dif.TotalMinutes, 0);
+            var coincidencias_igual = await _context.Actividades.Where(us => (us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) == 0 && DateTime.Compare(us.HoraFin, request.HoraFin) == 0)).ToListAsync();
+            var coincidencias_contenido = await _context.Actividades.Where(us => (us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0 || us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) == 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0 || us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) == 0)).ToListAsync();
+            var coincidencias_conteniendo = await _context.Actividades.Where(us => (us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0 || us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) == 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0 || us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) == 0)).ToListAsync();
+            var coincidencias_cruce = await _context.Actividades.Where(us => (us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) > 0 && DateTime.Compare(us.HoraFin, request.HoraFin) > 0 && DateTime.Compare(us.HoraIni, request.HoraFin) < 0 || us.UsuarioId == actividadFromDb.UsuarioId && DateTime.Compare(us.HoraIni, request.HoraIni) < 0 && DateTime.Compare(us.HoraFin, request.HoraFin) < 0 && DateTime.Compare(us.HoraFin, request.HoraIni) > 0)).ToListAsync();
 
-            _context.Actividades.Update(actividadFromDb);
-            await _context.SaveChangesAsync();
+            if (coincidencias_igual.Count() == 0)
+            {
+                if (coincidencias_contenido.Count() == 0)
+                {
+                    if (coincidencias_conteniendo.Count() == 0)
+                    {
+                        if(coincidencias_cruce.Count() == 0)
+                        {
+                            actividadFromDb.Nombre = request.Nombre;
+                            actividadFromDb.Detalle = request.Detalle;
+                            actividadFromDb.HoraIni = request.HoraIni;
+                            actividadFromDb.HoraFin = request.HoraFin;
+                            actividadFromDb.DuracionMin = Math.Round(dif.TotalMinutes, 0);
 
-            HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
+                            _context.Actividades.Update(actividadFromDb);
+                            await _context.SaveChangesAsync();
 
-            return Ok(new { Id = actividadId });
+                            HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadFromDb.Id}");
+
+                            return Ok(new { Id = actividadId });
+                        }
+                        else
+                        {
+                            return Problem("Este horario se cruza con otro horario");
+                        }
+                        
+                    }
+                    else
+                    {
+                        return Problem("Ya tiene una actividad dentro de este horario");
+                    }
+                }
+                else
+                {
+                    return Problem("No se puede llevar una actividad dentro del horario de otra actividad");
+                }
+            }
+            else
+            {
+                return Problem("No se pueden llevar 2 actividades en el mismo horario");
+            }
         }
 
         [HttpPut("finish/{actividadId:int}")]
