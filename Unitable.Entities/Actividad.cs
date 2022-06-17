@@ -27,9 +27,9 @@ namespace Unitable.Entities
         public bool Activa { get; set; }
 
         public int UsuarioId { get; set; }
-        public int TemaId { get; set; }
-
         public Usuario Usuario { get; set; }
+
+        public int TemaId { get; set; }
         public Tema Tema { get; set; }
     }
 }

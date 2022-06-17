@@ -12,7 +12,6 @@ namespace Unitable.Entities
         public string Contenido { get; set; }
 
         public int CursoId { get; set; }
-
         public Curso Curso { get; set; }
     }
 }

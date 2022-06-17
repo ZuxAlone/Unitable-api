@@ -12,7 +12,6 @@ namespace Unitable.Entities
         public bool IsCorrect { get; set; }
 
         public int PreguntaId { get; set; }
-
         public Pregunta Pregunta { get; set; }
     }
 }

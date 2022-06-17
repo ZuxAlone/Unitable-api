@@ -11,7 +11,6 @@ namespace Unitable.Entities
         public string PreguntaText { get; set; }
 
         public int TestId { get; set; }
-
         public Test Test { get; set; }
     }
 }

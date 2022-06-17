@@ -12,7 +12,6 @@ namespace Unitable.Entities
         public string Descripcion { get; set; }
 
         public int TemaId { get; set; }
-        
         public Tema Tema { get; set; }
     }
 }
