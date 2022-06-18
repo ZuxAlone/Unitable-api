@@ -72,6 +72,9 @@ builder.Services.AddDbContext<UnitableDbContext>(options =>
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IMensajeService, MensajeService>();
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IGrupoService, GrupoService>();
 
 builder.Services.AddCors(options =>
 {

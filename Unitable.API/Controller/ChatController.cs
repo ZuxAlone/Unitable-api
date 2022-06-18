@@ -4,6 +4,7 @@ using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
 using Unitable.Entities;
+using Unitable.Service;
 
 namespace Unitable.API.Controller
 {
@@ -11,10 +12,12 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class ChatController : ControllerBase
     {
+        private readonly IChatService _chatService;
         private readonly UnitableDbContext _context;
 
-        public ChatController(UnitableDbContext context)
+        public ChatController(IChatService chatService, UnitableDbContext context)
         {
+            _chatService = chatService;
             _context = context;
         }
 
@@ -24,7 +27,7 @@ namespace Unitable.API.Controller
             var response = new BaseResponseGeneric<ICollection<Chat>>();
             try
             {
-                response.Result = await _context.Chats.ToListAsync();
+                response.Result = await _chatService.Get();
                 response.Success = true;
                 return Ok(response);
             }
@@ -38,15 +41,7 @@ namespace Unitable.API.Controller
         [HttpPost]
         public async Task<ActionResult> Post(DtoChat request)
         {
-            var entity = new Chat
-            {
-                Detalle = request.Detalle,
-                CantMensajes = 0,
-                Status = true
-            };
-
-            _context.Chats.Add(entity);
-            await _context.SaveChangesAsync();
+            var entity = await _chatService.Post(request);
 
             HttpContext.Response.Headers.Add("location", $"/api/Tema/{entity.Id}");
 
@@ -56,28 +51,25 @@ namespace Unitable.API.Controller
         [HttpDelete]
         public async Task<ActionResult> Delete(int ChatId)
         {
-            var entity = await _context.Chats.FindAsync(ChatId);
-            if (entity == null) return NotFound();
-            _context.Chats.Remove(entity);
-            await _context.SaveChangesAsync();
-
+            var entity = await _chatService.Delete(ChatId);
+            if (entity == null)
+                return NotFound("Chat #" + ChatId + " Not Found");
             return Ok(entity);
         }
 
         [HttpPut("{ChatId:int}")]
         public async Task<ActionResult> Put(int ChatId, DtoChat request)
         {
-            var ChatFromDb = await _context.Chats.FindAsync(ChatId);
-            if (ChatFromDb == null) return NotFound();
-
-            ChatFromDb.Detalle = request.Detalle;
-
-            _context.Chats.Update(ChatFromDb);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Chat/{ChatFromDb.Id}");
-
-            return Ok(new { Id = ChatId });
+            var ChatFromDb = await _chatService.Put(ChatId, request);
+            if (ChatFromDb != null)
+            {
+                HttpContext.Response.Headers.Add("location", $"/api/Chat/{ChatFromDb.Id}");
+                return Ok(new { Id = ChatId });
+            }
+            else
+            {
+                return NotFound("Chat #" + ChatId + " Not Found");
+            }
         }
     }
 }

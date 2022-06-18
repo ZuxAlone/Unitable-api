@@ -4,8 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Unitable.DataAccess;
 using Unitable.Dto.Request;
-using Unitable.Dto.Response;
 using Unitable.Entities;
+using Unitable.Service;
+using Unitable.Dto.Response;
 
 
 namespace Unitable.API.Controller
@@ -14,10 +15,12 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class MensajeController : ControllerBase
     {
+        private readonly IMensajeService _mensajeService;
         private readonly UnitableDbContext _context;
 
-        public MensajeController(UnitableDbContext context)
+        public MensajeController(IMensajeService mensajeService, UnitableDbContext context)
         {
+            _mensajeService = mensajeService;
             _context = context;
         }
 
@@ -25,21 +28,9 @@ namespace Unitable.API.Controller
         [Authorize]
         public async Task<ActionResult<BaseResponseGeneric<ICollection<Mensaje>>>> Get()
         {
-            var response = new BaseResponseGeneric<ICollection<Mensaje>>();
-            try
-            {
-                var userPrincipal = GetUserPrincipal();
-
-
-                response.Result = await _context.Mensajes.Where(msg => (msg.UsuarioId == userPrincipal.Id)).ToListAsync();
-                response.Success = true;
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.Errors.Add(ex.Message);
-                return response;
-            }
+            var userPrincipal = GetUserPrincipal();
+            var response = await _mensajeService.GetMensajes(userPrincipal);
+            return Ok(response);
         }
 
         [HttpPost]
@@ -47,50 +38,28 @@ namespace Unitable.API.Controller
         public async Task<ActionResult> Post(DtoMensaje request)
         {
             var userPrincipal = GetUserPrincipal();
-            var ChatFromDb = await _context.Chats.FindAsync(request.ChatId);
-            if (ChatFromDb == null)
-                return NotFound("Chat #" + request.ChatId + " Not Found");
+            var resm = await _mensajeService.Post(userPrincipal, request);
 
-            var grupoFromDb = await _context.Grupos.Where(gr => gr.ChatId == ChatFromDb.Id).ToListAsync();
-            if (grupoFromDb.Count == 0)
-                return NotFound("Chat #" + request.ChatId + " No tiene grupo");
-            var grupo = grupoFromDb.ElementAt(0);
-
-            var userGrupo = await _context.Usuario_Grupos.Where( ug => ug.UsuarioId == userPrincipal.Id && ug.GrupoId == grupo.Id).ToListAsync();
-
-            if (userGrupo.Count == 0)
-                return NotFound("Usuario #" + userPrincipal.Id + " No pertenece al grupo");
-
-            var entity = new Mensaje
+            if (resm.Success)
             {
-                MensajeTexto = request.MensajeTexto,
-                HoraMensaje = DateTime.Now,
-                UsuarioId = userPrincipal.Id,
-                Usuario = userPrincipal,
-                ChatId = ChatFromDb.Id,
-                Chat = ChatFromDb,
-
-                Status = true
-            };
-
-            _context.Mensajes.Add(entity);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Mensaje/{entity.Id}");
-
-            return Ok(entity);
+                var entity = (Mensaje)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Mensaje/{entity.Id}");
+                return Ok(entity);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpDelete]
         [Authorize]
         public async Task<ActionResult> Delete(int MensajeId)
         {
-            var entity = await _context.Mensajes.FindAsync(MensajeId);
+            var userPrincipal = GetUserPrincipal();
+            var entity = await _mensajeService.Delete(userPrincipal, MensajeId);
 
-            if (entity == null) return NotFound();
-
-            _context.Mensajes.Remove(entity);
-            await _context.SaveChangesAsync();
+            if (entity == null) return NotFound("Mensaje #" + MensajeId + " Not Found");
 
             return Ok(entity);
         }
@@ -100,17 +69,11 @@ namespace Unitable.API.Controller
         public async Task<ActionResult> Put(int MensajeId, DtoMensaje request)
         {
             var userPrincipal = GetUserPrincipal();
-            var MensajeFromDb = await _context.Mensajes.FindAsync(MensajeId);
-            if (MensajeFromDb == null || userPrincipal.Id != MensajeFromDb.UsuarioId) return NotFound();
-
-            MensajeFromDb.MensajeTexto = request.MensajeTexto;
-
-            _context.Mensajes.Update(MensajeFromDb);
-            await _context.SaveChangesAsync();
+            var MensajeFromDb = await _mensajeService.Put(userPrincipal, MensajeId, request);
 
             HttpContext.Response.Headers.Add("location", $"/api/Mensaje/{MensajeFromDb.Id}");
 
-            return Ok(new { Id = MensajeId });
+            return Ok(MensajeFromDb);
         }
 
         private Usuario GetUserPrincipal()
