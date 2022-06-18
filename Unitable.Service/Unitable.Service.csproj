@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Unitable.DataAccess\Unitable.DataAccess.csproj" />
+    <ProjectReference Include="..\Unitable.Dto\Unitable.Dto.csproj" />
+    <ProjectReference Include="..\Unitable.Entities\Unitable.Entities.csproj" />
+  </ItemGroup>
+
 </Project>

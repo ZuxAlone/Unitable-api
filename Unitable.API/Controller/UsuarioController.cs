@@ -2,10 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using Unitable.API.Service;
 using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Entities;
+using Unitable.Service;
 
 namespace Unitable.API.Controller
 {
@@ -13,63 +13,29 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class UsuarioController : ControllerBase
     {
+        private readonly IUsuarioService _usuarioService;
         private readonly UnitableDbContext _context;
-        private readonly ITokenService _tokenService;
-        private readonly IConfiguration _configuration;
 
-        public UsuarioController(UnitableDbContext context, ITokenService tokenService, IConfiguration configuration)
+        public UsuarioController(IUsuarioService usuarioService, UnitableDbContext context)
         {
+            _usuarioService = usuarioService;
             _context = context;
-            _tokenService = tokenService;
-            _configuration = configuration;
         }
 
         [HttpPost("signup/")]
         public async Task<ActionResult<Usuario>> Signup(DtoUsuario request)
         {
-            var dbEntry = await _context.Usuarios.FirstOrDefaultAsync(user => user.Correo == request.Correo);
-            if (dbEntry != null) return Problem("El correo está en uso");
-
-            var entity = new Usuario
-            {
-                Nombres = request.Nombres,
-                Apellidos = request.Apellidos,
-                Correo = request.Correo,
-                Password = request.Password,
-                Carrera = request.Carrera,
-                Tipo = request.Tipo,
-
-                NumActCompletas = 0,
-                NumTestAprobados = 0,
-                NumMonedas = 0,
-                IsPremium = false,
-
-                Status = true
-            };
-
-            _context.Usuarios.Add(entity);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/usuario/{entity.Id}");
-
+            var entity = await _usuarioService.Signup(request);
+            if (entity == null) return Problem("El correo está en uso");
             return Ok(entity);
         }
 
         [HttpPost("login/")]
         public async Task<ActionResult> Login(DtoLoginUsuario request)
         {
-            var usuario =  await _context.Usuarios.FirstOrDefaultAsync(user => (
-                user.Correo == request.Correo && user.Password == request.Password
-            ));
-
-            if (usuario == null) return NotFound();
-
-            var generatedToken = _tokenService.BuildToken(_configuration["Jwt:Key"].ToString(), _configuration["Jwt:Issuer"].ToString(), request);
-            return Ok(new
-            {
-                usuario = usuario,
-                token = generatedToken
-            });
+            var response = await _usuarioService.Login(request);
+            if (response == null) return NotFound();
+            return Ok(response);
         }
 
         [HttpGet]
@@ -82,17 +48,10 @@ namespace Unitable.API.Controller
 
         [HttpGet("usuarios/")]
         [Authorize]
-        public async Task<ActionResult<IObservable<Usuario>>> GetUsuarios()
+        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
         {
-            try
-            {
-                var usuarios = await _context.Usuarios.ToListAsync();
-                return Ok(usuarios);
-            }
-            catch (Exception ex)
-            {
-                return Problem(ex.Message);
-            }
+            var usuarios = await _usuarioService.GetUsuarios();
+            return Ok(usuarios);
         }
 
         [HttpPut]
@@ -100,16 +59,8 @@ namespace Unitable.API.Controller
         public async Task<ActionResult<Usuario>> EditUsuario(DtoEditUsuario request)
         {
             var userPrincipal = GetUserPrincipal();
-
-            userPrincipal.Nombres = request.Nombres;
-            userPrincipal.Apellidos = request.Apellidos;
-            userPrincipal.Carrera = request.Carrera;
-            userPrincipal.Tipo = request.Tipo;
-
-            _context.Usuarios.Update(userPrincipal);
-            await _context.SaveChangesAsync();
-
-            return Ok(userPrincipal);
+            var userUpdated = await _usuarioService.EditUsuario(userPrincipal, request);
+            return Ok(userUpdated);
         }
 
         [HttpPut("premium/")]
@@ -117,18 +68,8 @@ namespace Unitable.API.Controller
         public async Task<ActionResult> GetPremium()
         {
             var userPrincipal = GetUserPrincipal();
-
-            if (userPrincipal.IsPremium) userPrincipal.IsPremium = false;
-            else userPrincipal.IsPremium = true;
-
-            _context.Usuarios.Update(userPrincipal);
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                premium = userPrincipal.IsPremium,
-                mensaje = "Has cambiado tu suscripción!"
-            });
+            var response = await _usuarioService.GetPremium(userPrincipal);
+            return Ok(response);
         }
 
         [HttpDelete]
@@ -136,15 +77,8 @@ namespace Unitable.API.Controller
         public async Task<ActionResult> DeleteUsuario()
         {
             var userPrincipal = GetUserPrincipal();
-
-            _context.Usuarios.Remove(userPrincipal);
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                usuario = userPrincipal,
-                mensaje = "Usuario Eliminado"
-            });
+            var response = await _usuarioService.DeleteUsuario(userPrincipal);
+            return Ok(response);
         }
 
         private Usuario GetUserPrincipal()

@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Unitable.API.Service;
 using Unitable.DataAccess;
+using Unitable.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -43,7 +43,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Servicio del Token, Autorización y Autentificación
-builder.Services.AddSingleton<ITokenService>(new TokenService());
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(options =>
 {
@@ -70,6 +69,9 @@ builder.Services.AddDbContext<UnitableDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
 });
+
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 builder.Services.AddCors(options =>
 {

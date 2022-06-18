@@ -4,7 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using Unitable.Dto.Request;
 
-namespace Unitable.API.Service
+namespace Unitable.Service
 {
     public interface ITokenService
     {
