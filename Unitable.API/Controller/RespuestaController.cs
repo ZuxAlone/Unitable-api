@@ -19,21 +19,11 @@ namespace Unitable.API.Controller
         }
 
         [HttpGet]
-        public async Task<ActionResult<BaseResponseGeneric<ICollection<Respuesta>>>> Get()
+        public async Task<ActionResult<Respuesta>> Get()
         {
-            var response = new BaseResponseGeneric<ICollection<Respuesta>>();
+            var respuestas = await _context.Respuestas.ToListAsync();
 
-            try
-            {
-                response.Result = await _context.Respuestas.ToListAsync();
-                response.Success = true;
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.Errors.Add(ex.Message);
-                return response;
-            }
+            return Ok(respuestas);
 
         }
 

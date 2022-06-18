@@ -21,21 +21,11 @@ namespace Unitable.API.Controller
         }
 
         [HttpGet]
-        public async Task<ActionResult<BaseResponseGeneric<ICollection<Actividad>>>> Get()
+        public async Task<ActionResult<Actividad>> Get()
         {
-            var response = new BaseResponseGeneric<ICollection<Actividad>>();
+            var todas_Actividades = await _context.Actividades.ToListAsync();
 
-            try
-            {
-                response.Result = await _context.Actividades.ToListAsync();
-                response.Success = true;
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.Errors.Add(ex.Message);
-                return response;
-            }
+            return Ok(todas_Actividades);
 
         }
 
@@ -140,7 +130,7 @@ namespace Unitable.API.Controller
             }  
         }
 
-        [HttpDelete]
+        [HttpDelete("{actividadId:int}")]
         public async Task<ActionResult> Delete(int actividadId)
         {
             var entity = await _context.Actividades.FindAsync(actividadId);
