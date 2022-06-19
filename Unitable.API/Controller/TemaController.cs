@@ -80,5 +80,13 @@ namespace Unitable.API.Controller
 
             return Ok(new { Id = TemaId });
         }
+
+        [HttpGet("temas/{cursoId:int}")]
+        public async Task<ActionResult<Tema>> GetTemasByCurso(int cursoId)
+        {
+            var temas_curso = await _context.Temas.Where(us => (us.CursoId == cursoId)).ToListAsync();
+
+            return Ok(temas_curso);
+        }
     }
 }

@@ -222,7 +222,7 @@ namespace Unitable.API.Controller
 
             Random randomm = new Random();
 
-            int r = randomm.Next(0, tests.Count);
+            int r = (randomm.Next(0, tests.Count));
 
             var test = tests[r];
 
@@ -231,7 +231,7 @@ namespace Unitable.API.Controller
 
             await _context.SaveChangesAsync();
 
-            return Ok(test);
+            return Ok(test.Id);
         }
 
         [HttpGet("actividades")]

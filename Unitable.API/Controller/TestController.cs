@@ -118,6 +118,14 @@ namespace Unitable.API.Controller
 
         }
 
+        [HttpGet("test/{testId:int}")]
+        public async Task<ActionResult<Test>> GetTemasByCurso(int testId)
+        {
+            var test = await _context.Tests.FindAsync(testId);
+
+            return Ok(test);
+        }
+
         private Usuario GetUserPrincipal()
         {
             var claimsIdentity = User.Identity as ClaimsIdentity;
