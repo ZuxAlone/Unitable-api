@@ -66,9 +66,9 @@ namespace Unitable.Service
             };
         }
 
-        public async Task<List<Usuario>> GetUsuarios()
+        public async Task<List<Usuario>> GetUsuarios(Usuario userPrincipal)
         {
-            var usuarios = await _context.Usuarios.ToListAsync();
+            var usuarios = await _context.Usuarios.Where(us => us.Id != userPrincipal.Id).ToListAsync();
             return usuarios;
         }
 

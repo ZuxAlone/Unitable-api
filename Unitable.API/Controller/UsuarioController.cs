@@ -48,9 +48,10 @@ namespace Unitable.API.Controller
 
         [HttpGet("usuarios/")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
+        public async Task<ActionResult<IEnumerable<Usuario>>> GetOtherUsuarios()
         {
-            var usuarios = await _usuarioService.GetUsuarios();
+            var userPrincipal = GetUserPrincipal();
+            var usuarios = await _usuarioService.GetUsuarios(userPrincipal);
             return Ok(usuarios);
         }
 

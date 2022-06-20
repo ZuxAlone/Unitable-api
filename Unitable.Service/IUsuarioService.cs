@@ -12,7 +12,7 @@ namespace Unitable.Service
     {
         Task<Usuario> Signup(DtoUsuario request);
         Task<object> Login(DtoLoginUsuario request);
-        Task<List<Usuario>> GetUsuarios();
+        Task<List<Usuario>> GetUsuarios(Usuario userPrincipal);
         Task<Usuario> EditUsuario(Usuario userPrincipal, DtoEditUsuario request);
         Task<object> GetPremium(Usuario userPrincipal);
         Task<object> DeleteUsuario(Usuario userPrincipal);
