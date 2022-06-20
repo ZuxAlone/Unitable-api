@@ -114,6 +114,8 @@ namespace Unitable.API.Controller
             if (recompensaDb == null) return NotFound(new { mensaje = "No existe esta recompensa" });
             if (userPrincipal.NumMonedas < recompensaDb.PrecioMon) return Problem("No tienes monedas suficientes");
 
+            userPrincipal.NumMonedas -= recompensaDb.PrecioMon;
+
             var usuario_recompensa = new Usuario_Recompensa
             {
                 UsuarioId = userPrincipal.Id,
@@ -133,7 +135,6 @@ namespace Unitable.API.Controller
         [Authorize]
         public async Task<ActionResult<Usuario>> GetRecompensasByUsuario()
         {
-            
             var userPrincipal = GetUserPrincipal();
             var usuario_recompesas =await _context.Usuario_Recompensas.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
 

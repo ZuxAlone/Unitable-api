@@ -127,7 +127,7 @@ namespace Unitable.API.Controller
                 HttpContext.Response.Headers.Add("location", $"/api/actividad/{entity.Id}");
 
                 return Ok(entity);
-            }  
+            }
         }
 
         [HttpDelete("{actividadId:int}")]
@@ -184,7 +184,6 @@ namespace Unitable.API.Controller
                         {
                             return Problem("Este horario se cruza con otro horario");
                         }
-                        
                     }
                     else
                     {
