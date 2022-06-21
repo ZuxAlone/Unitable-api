@@ -14,7 +14,7 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 
-// Configuración Swagger con Autentificación
+// Configuraci? Swagger con Autentificaci?
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -42,7 +42,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Servicio del Token, Autorización y Autentificación
+// Servicio del Token, Autorizaci? y Autentificaci?
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(options =>
 {
@@ -75,6 +75,7 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IMensajeService, MensajeService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IGrupoService, GrupoService>();
+builder.Services.AddScoped<IActividadService, ActividadService>();
 
 builder.Services.AddCors(options =>
 {
@@ -96,7 +97,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Use Autentificación y Autorización
+// Use Autentificaci? y Autorizaci?
 app.UseAuthentication();
 app.UseAuthorization();
 
