@@ -4,6 +4,7 @@ using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
 using Unitable.Entities;
+using Unitable.Service;
 
 namespace Unitable.API.Controller
 {
@@ -11,17 +12,19 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class TemaController : ControllerBase
     {
+        private readonly ITemaService _temaService;
         private readonly UnitableDbContext _context;
 
-        public TemaController(UnitableDbContext context)
+        public TemaController(ITemaService temaService ,UnitableDbContext context)
         {
+            _temaService = temaService;
             _context = context;
         }
 
         [HttpGet]
         public async Task<ActionResult<Tema>> Get()
         {
-            var temas = await _context.Temas.ToListAsync();
+            var temas = await _temaService.Get();
 
             return Ok(temas);
 
@@ -30,61 +33,51 @@ namespace Unitable.API.Controller
         [HttpPost]
         public async Task<ActionResult> Post(DtoTema request)
         {
-            var entity = new Tema
+            var resm = await _temaService.Post(request);
+
+            if (resm.Success)
             {
-                Nombre = request.Nombre,
-                Contenido = request.Contenido,
-                CursoId = request.CursoId,
-                Curso = await _context.Cursos.FindAsync(request.CursoId),
-
-                Status = true
-            };
-
-            _context.Temas.Add(entity);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Tema/{entity.Id}");
-
-            return Ok(entity);
+                var entity = (Tema)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Tema/{entity.Id}");
+                return Ok(entity);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int TemaId)
         {
-            var entity = await _context.Temas.FindAsync(TemaId);
+            var entity = await _temaService.Delete(TemaId);
 
             if (entity == null) return NotFound();
-
-            _context.Temas.Remove(entity);
-            await _context.SaveChangesAsync();
 
             return Ok(entity);
         }
 
         [HttpPut("{temaId:int}")]
-        public async Task<ActionResult> Put(int TemaId, DtoTema request)
+        public async Task<ActionResult> Put(int temaId, DtoTema request)
         {
-            var TemaFromDb = await _context.Temas.FindAsync(TemaId);
+            var resm = await _temaService.Put(temaId, request);
 
-            if (TemaFromDb == null) return NotFound();
-
-            TemaFromDb.Nombre = request.Nombre;
-            TemaFromDb.Contenido = request.Contenido;
-            TemaFromDb.CursoId = request.CursoId;
-            TemaFromDb.Curso = await _context.Cursos.FindAsync(request.CursoId);
-
-            _context.Temas.Update(TemaFromDb);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Tema/{TemaFromDb.Id}");
-
-            return Ok(new { Id = TemaId });
+            if (resm.Success)
+            {
+                var TemaFromDb = (Tema)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Tema/{TemaFromDb.Id}");
+                return Ok(TemaFromDb);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpGet("temas/{cursoId:int}")]
         public async Task<ActionResult<Tema>> GetTemasByCurso(int cursoId)
         {
-            var temas_curso = await _context.Temas.Where(us => (us.CursoId == cursoId)).ToListAsync();
+            var temas_curso = await _temaService.GetTemasByCurso(cursoId);
 
             return Ok(temas_curso);
         }
