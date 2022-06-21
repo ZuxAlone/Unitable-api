@@ -33,6 +33,15 @@ namespace Unitable.API.Controller
             return Ok(response);
         }
 
+        [HttpGet("{ChatId:int}")]
+        [Authorize]
+        public async Task<ActionResult<BaseResponseGeneric<ICollection<Mensaje>>>> GetFromChat(int ChatId)
+        {
+            var userPrincipal = GetUserPrincipal();
+            var response = await _mensajeService.GetMensajesFromChat(ChatId);
+            return Ok(response);
+        }
+
         [HttpPost]
         [Authorize]
         public async Task<ActionResult> Post(DtoMensaje request)

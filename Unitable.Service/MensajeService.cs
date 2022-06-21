@@ -37,6 +37,13 @@ namespace Unitable.Service
             return response;
         }
 
+        public async Task<ICollection<Mensaje>> GetMensajesFromChat(int ChatId)
+        {
+            var response = await _context.Mensajes.Where(msg => (msg.ChatId == ChatId)).ToListAsync();
+            return response;
+        }
+
+
         public async Task<BaseResponseGeneric<Mensaje>> Post(Usuario userPrincipal, DtoMensaje request) 
         {
             var res = new BaseResponseGeneric<Mensaje>();

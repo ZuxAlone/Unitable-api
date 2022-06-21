@@ -32,6 +32,25 @@ namespace Unitable.API.Controller
             return Ok(grupo);
         }
 
+        [HttpGet("others")]
+        [Authorize]
+        public async Task<ActionResult<ICollection<Grupo>>> GetOthers()
+        {
+            var userPrincipal = GetUserPrincipal();
+            var grupo = await _grupoService.GetOthers(userPrincipal);
+            return Ok(grupo);
+        }
+
+        [HttpGet("{GrupoId:int}")]
+        [Authorize]
+        public async Task<ActionResult<ICollection<Grupo>>> GetById(int GrupoId)
+        {
+            var grupo = await _grupoService.GetById(GrupoId);
+            if (grupo == null)
+                return NotFound("Grupo#" + GrupoId + " Not found");
+            return Ok(grupo);
+        }
+
         [HttpPost]
         [Authorize]
         public async Task<ActionResult> Post(DtoGrupo request)

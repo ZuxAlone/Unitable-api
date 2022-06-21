@@ -41,6 +41,27 @@ namespace Unitable.Service
             }
         }
 
+        public async Task<ICollection<Grupo>> GetOthers(Usuario userPrincipal)
+        {
+            try
+            {
+                var usuarioGrupo = await _context.Usuario_Grupos.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
+                var indexGrupos = usuarioGrupo.Select(ug => ug.GrupoId).ToList();
+                var response = await _context.Grupos.Where(gr => !indexGrupos.Contains(gr.Id)).ToListAsync();
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public async Task<Grupo> GetById(int grupoId)
+        {
+            var entity = await _context.Grupos.FindAsync(grupoId);
+            return entity;
+        }
+
         public async Task<Usuario_Grupo> JoinGrupo(Usuario userPrincipal, int GrupoId)
         {
             var grupo = _context.Grupos.FirstOrDefault(gr => gr.Id == GrupoId);
