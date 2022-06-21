@@ -95,15 +95,15 @@ namespace Unitable.API.Controller
 
         [HttpPost("resultado")]
         [Authorize]
-        public async Task<ActionResult<List<DtoRespuesta>>> TestResultado(List<DtoRespuesta> request)
+        public async Task<ActionResult<List<Boolean>>> TestResultado(List<Boolean> request)
         {
             int c = 0;
-            foreach(DtoRespuesta respuesta in request)
+            foreach (Boolean respuesta in request)
             {
-                if(respuesta.IsCorrect == true) { c++; }
+                if (respuesta == true) { c++; }
             }
 
-            double percentcorrect = ((double)c / (double)request.Count())*100.00;
+            double percentcorrect = ((double)c / (double)request.Count()) * 100.00;
             var userPrincipal = GetUserPrincipal();
 
             if (percentcorrect > 75)
@@ -114,7 +114,7 @@ namespace Unitable.API.Controller
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { mensaje = "Tienes un " + percentcorrect.ToString() + "% de respuestas correctas."});
+            return Ok(percentcorrect);
 
         }
 
