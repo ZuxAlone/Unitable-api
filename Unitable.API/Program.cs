@@ -76,6 +76,7 @@ builder.Services.AddScoped<IMensajeService, MensajeService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IGrupoService, GrupoService>();
 builder.Services.AddScoped<IActividadService, ActividadService>();
+builder.Services.AddScoped<ICursoService, CursoService>();
 
 builder.Services.AddCors(options =>
 {

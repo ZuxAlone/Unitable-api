@@ -4,6 +4,7 @@ using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
 using Unitable.Entities;
+using Unitable.Service;
 
 namespace Unitable.API.Controller
 {
@@ -11,50 +12,46 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class CursoController : ControllerBase
     {
+        private readonly ICursoService _cursoService;
         private readonly UnitableDbContext _context;
 
-        public CursoController(UnitableDbContext context)
+        public CursoController(ICursoService cursoService, UnitableDbContext context)
         {
+            _cursoService = cursoService;
             _context = context;
         }
 
         [HttpGet]
         public async Task<ActionResult<Curso>> Get()
         {
-            var cursos = await _context.Cursos.ToListAsync();
+            var cursos = await _cursoService.Get();
 
             return Ok(cursos);
-
         }
 
         [HttpPost]
         public async Task<ActionResult> Post(DtoCurso request)
         {
-            var entity = new Curso
+            var resm = await _cursoService.Post(request);
+
+            if (resm.Success)
             {
-                Nombre = request.Nombre,
-                Descripcion = request.Descripcion,
-
-                Status = true
-            };
-
-            _context.Cursos.Add(entity);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Curso/{entity.Id}");
-
-            return Ok(entity);
+                var entity = (Curso)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Curso/{entity.Id}");
+                return Ok(entity);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int CursoId)
         {
-            var entity = await _context.Cursos.FindAsync(CursoId);
+            var entity = await _cursoService.Delete(CursoId);
 
             if (entity == null) return NotFound();
-
-            _context.Cursos.Remove(entity);
-            await _context.SaveChangesAsync();
 
             return Ok(entity);
         }
@@ -62,21 +59,18 @@ namespace Unitable.API.Controller
         [HttpPut("{CursoId:int}")]
         public async Task<ActionResult> Put(int CursoId, DtoCurso request)
         {
-            var CursoFromDb = await _context.Cursos.FindAsync(CursoId);
+            var resm = await _cursoService.Put(CursoId, request);
 
-            if (CursoFromDb == null) return NotFound();
-
-            CursoFromDb.Nombre = request.Nombre;
-            CursoFromDb.Descripcion = request.Descripcion;
-
-            //_context.Entry(CursoFromDb).State = EntityState.Modified;
-            _context.Cursos.Update(CursoFromDb);
-
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Curso/{CursoFromDb.Id}");
-
-            return Ok(new { Id = CursoId });
+            if (resm.Success)
+            {
+                var CursoFromDb = (Curso)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Curso/{CursoFromDb.Id}");
+                return Ok(CursoFromDb);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
     }
 }
