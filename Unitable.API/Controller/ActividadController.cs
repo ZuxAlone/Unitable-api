@@ -78,7 +78,6 @@ namespace Unitable.API.Controller
             {
                 return NotFound(resm.Errors);
             }
-            
         }
 
         [HttpPut("finish/{actividadId:int}")]

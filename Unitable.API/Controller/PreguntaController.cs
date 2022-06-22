@@ -4,6 +4,7 @@ using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
 using Unitable.Entities;
+using Unitable.Service;
 
 namespace Unitable.API.Controller
 {
@@ -11,17 +12,19 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class PreguntaController : ControllerBase
     {
+        private readonly IPreguntaService _preguntaService;
         private readonly UnitableDbContext _context;
 
-        public PreguntaController(UnitableDbContext context)
+        public PreguntaController(IPreguntaService preguntaService, UnitableDbContext context)
         {
+            _preguntaService = preguntaService;
             _context = context;
         }
 
         [HttpGet]
         public async Task<ActionResult<Pregunta>> Get()
         {
-            var preguntas = await _context.Preguntas.ToListAsync();
+            var preguntas = await _preguntaService.Get();
 
             return Ok(preguntas);
 
@@ -30,32 +33,26 @@ namespace Unitable.API.Controller
         [HttpPost]
         public async Task<ActionResult> Post(DtoPregunta request)
         {
-            var entity = new Pregunta
+            var resm = await _preguntaService.Post(request);
+
+            if (resm.Success)
             {
-                PreguntaText = request.PreguntaText,
-                TestId = request.TestId,
-                Test = await _context.Tests.FindAsync(request.TestId),
-
-                Status = true
-            };
-
-            _context.Preguntas.Add(entity);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Pregunta/{entity.Id}");
-
-            return Ok(entity);
+                var entity = (Pregunta)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Pregunta/{entity.Id}");
+                return Ok(entity);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int PreguntaId)
         {
-            var entity = await _context.Preguntas.FindAsync(PreguntaId);
+            var entity = await _preguntaService.Delete(PreguntaId);
 
             if (entity == null) return NotFound();
-
-            _context.Preguntas.Remove(entity);
-            await _context.SaveChangesAsync();
 
             return Ok(entity);
         }
@@ -63,20 +60,18 @@ namespace Unitable.API.Controller
         [HttpPut("{PreguntaId:int}")]
         public async Task<ActionResult> Put(int PreguntaId, DtoPregunta request)
         {
-            var PreguntaFromDb = await _context.Preguntas.FindAsync(PreguntaId);
+            var resm = await _preguntaService.Put(PreguntaId, request);
 
-            if (PreguntaFromDb == null) return NotFound();
-
-            PreguntaFromDb.PreguntaText = request.PreguntaText;
-            PreguntaFromDb.TestId = request.TestId;
-            PreguntaFromDb.Test = await _context.Tests.FindAsync(request.TestId);
-
-            _context.Preguntas.Update(PreguntaFromDb);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Pregunta/{PreguntaFromDb.Id}");
-
-            return Ok(new { Id = PreguntaId });
+            if (resm.Success)
+            {
+                var PreguntaFromDb = (Pregunta)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Pregunta/{PreguntaFromDb.Id}");
+                return Ok(PreguntaFromDb);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpGet("preguntas/{testId:int}")]

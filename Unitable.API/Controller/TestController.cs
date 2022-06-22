@@ -6,6 +6,7 @@ using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
 using Unitable.Entities;
+using Unitable.Service;
 
 namespace Unitable.API.Controller
 {
@@ -13,62 +14,47 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class TestController : ControllerBase
     {
+        private readonly ITestService _testService;
         private readonly UnitableDbContext _context;
 
-        public TestController(UnitableDbContext context)
+        public TestController(ITestService testService, UnitableDbContext context)
         {
+            _testService = testService;
             _context = context;
         }
 
         [HttpGet]
         public async Task<ActionResult<BaseResponseGeneric<ICollection<Test>>>> Get()
         {
-            var response = new BaseResponseGeneric<ICollection<Test>>();
+            var tests = await _testService.Get();
 
-            try
-            {
-                response.Result = await _context.Tests.ToListAsync();
-                response.Success = true;
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.Errors.Add(ex.Message);
-                return response;
-            }
+            return Ok(tests);
 
         }
 
         [HttpPost]
         public async Task<ActionResult> Post(DtoTest request)
         {
-            var entity = new Test
+            var resm = await _testService.Post(request);
+
+            if (resm.Success)
             {
-                Nombre = request.Nombre,
-                Descripcion = request.Descripcion,
-                TemaId = request.TemaId,
-                Tema = await _context.Temas.FindAsync(request.TemaId),
-
-                Status = true
-            };
-
-            _context.Tests.Add(entity);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Test/{entity.Id}");
-
-            return Ok(entity);
+                var entity = (Test)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Test/{entity.Id}");
+                return Ok(entity);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int TestId)
         {
-            var entity = await _context.Tests.FindAsync(TestId);
+            var entity = await _testService.Delete(TestId);
 
             if (entity == null) return NotFound();
-
-            _context.Tests.Remove(entity);
-            await _context.SaveChangesAsync();
 
             return Ok(entity);
         }
@@ -76,21 +62,18 @@ namespace Unitable.API.Controller
         [HttpPut("{TestId:int}")]
         public async Task<ActionResult> Put(int TestId, DtoTest request)
         {
-            var TestFromDb = await _context.Tests.FindAsync(TestId);
+            var resm = await _testService.Put(TestId, request);
 
-            if (TestFromDb == null) return NotFound();
-
-            TestFromDb.Nombre = request.Nombre;
-            TestFromDb.Descripcion = request.Descripcion;
-            TestFromDb.TemaId = request.TemaId;
-            TestFromDb.Tema = await _context.Temas.FindAsync(request.TemaId);
-
-            _context.Tests.Update(TestFromDb);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Test/{TestFromDb.Id}");
-
-            return Ok(new { Id = TestId });
+            if (resm.Success)
+            {
+                var TestFromDb = (Test)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Test/{TestFromDb.Id}");
+                return Ok(TestFromDb);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpPost("resultado")]
@@ -118,10 +101,9 @@ namespace Unitable.API.Controller
         }
 
         [HttpGet("test/{testId:int}")]
-        public async Task<ActionResult<Test>> GetTemasByCurso(int testId)
+        public async Task<ActionResult<Test>> GetTestById(int testId)
         {
             var test = await _context.Tests.FindAsync(testId);
-
             return Ok(test);
         }
 

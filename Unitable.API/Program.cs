@@ -78,6 +78,9 @@ builder.Services.AddScoped<IGrupoService, GrupoService>();
 builder.Services.AddScoped<IActividadService, ActividadService>();
 builder.Services.AddScoped<ICursoService, CursoService>();
 builder.Services.AddScoped<ITemaService, TemaService>();
+builder.Services.AddScoped<ITestService, TestService>();
+builder.Services.AddScoped<IPreguntaService, PreguntaService>();
+builder.Services.AddScoped<IRespuestaService, RespuestaService>();
 
 builder.Services.AddCors(options =>
 {

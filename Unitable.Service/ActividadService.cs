@@ -29,7 +29,7 @@ namespace Unitable.Service
             if (dif.TotalMinutes < 0) {
                 res.Success = false;
                 res.Errors.Add("La fecha inicial tiene que ser antes que la fecha final");
-                return res; 
+                return res;
             }
             if (request.HoraFin == request.HoraIni)
             {

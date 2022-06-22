@@ -39,7 +39,6 @@ namespace Unitable.Service
                 resm.Errors.Add("Ya existe un curso con este nombre");
                 return resm;
             }
-               
             var entity = new Curso
             {
                 Nombre = request.Nombre,
@@ -86,7 +85,7 @@ namespace Unitable.Service
 
             var CursoNameRepetido = await _context.Cursos.Where(us => (us.Nombre == request.Nombre && us.Id != CursoId)).ToListAsync();
 
-            if (CursoNameRepetido.Count != 0) 
+            if (CursoNameRepetido.Count != 0)
             {
                 resm.Success = false;
                 resm.Errors.Add("Ya existe un curso con este nombre");
