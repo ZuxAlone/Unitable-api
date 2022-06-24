@@ -81,5 +81,16 @@ namespace Unitable.API.Controller
 
             return Ok(temas_curso);
         }
+
+        [HttpGet("tema/{temaId:int}")]
+        public async Task<ActionResult<Tema>> GetTemaById(int temaId)
+        {
+            var entity = await _temaService.GetTemaById(temaId);
+
+            if (entity == null) return NotFound();
+
+            return Ok(entity);
+
+        }
     }
 }

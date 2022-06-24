@@ -17,5 +17,6 @@ namespace Unitable.Service
         Task<Tema> Delete(int TemaId);
         Task<BaseResponseGeneric<Tema>> Put(int TemaId, DtoTema request);
         Task<List<Tema>> GetTemasByCurso(int cursoId);
+        Task<Tema>GetTemaById(int temaId);
     }
 }

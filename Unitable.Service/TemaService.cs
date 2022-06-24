@@ -122,5 +122,19 @@ namespace Unitable.Service
 
             return temas_curso;
         }
+
+        public async Task<Tema> GetTemaById(int temaId)
+        {
+            var entity = await _context.Temas.FindAsync(temaId);
+
+            if (entity != null)
+            {
+                return entity;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

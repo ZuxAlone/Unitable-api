@@ -25,6 +25,15 @@ namespace Unitable.Service
         public async Task<BaseResponseGeneric<Actividad>> Post(Usuario userPrincipal, DtoActividad request)
         {
             var res = new BaseResponseGeneric<Actividad>();
+
+            var ActividadNameRepetido = await _context.Actividades.Where(us => (us.UsuarioId == userPrincipal.Id && us.Nombre == request.Nombre)).ToListAsync();
+            if (ActividadNameRepetido.Count != 0)
+            {
+                res.Success = false;
+                res.Errors.Add("Ya existe un curso con este nombre");
+                return res;
+            }
+
             TimeSpan dif = request.HoraFin - request.HoraIni;
             if (dif.TotalMinutes < 0) {
                 res.Success = false;
@@ -162,6 +171,14 @@ namespace Unitable.Service
             {
                 res.Success = false;
                 res.Errors.Add("El valor no esta definido");
+                return res;
+            }
+
+            var ActividadNameRepetido = await _context.Actividades.Where(us => (us.UsuarioId == actividadFromDb.UsuarioId && us.Nombre == request.Nombre)).ToListAsync();
+            if (ActividadNameRepetido.Count != 0)
+            {
+                res.Success = false;
+                res.Errors.Add("Ya existe un curso con este nombre");
                 return res;
             }
 
