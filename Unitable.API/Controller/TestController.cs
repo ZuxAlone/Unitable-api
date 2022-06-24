@@ -78,32 +78,20 @@ namespace Unitable.API.Controller
 
         [HttpPost("resultado")]
         [Authorize]
-        public async Task<ActionResult<List<Boolean>>> TestResultado(List<Boolean> request)
+        public async Task<ActionResult<Double>> TestResultado(List<Boolean> request)
         {
-            int c = 0;
-            foreach (Boolean respuesta in request)
-            {
-                if (respuesta == true) { c++; }
-            }
-
-            double percentcorrect = ((double)c / (double)request.Count()) * 100.00;
             var userPrincipal = GetUserPrincipal();
+            var mers = await _testService.TestResultado(userPrincipal, request);
 
-            if (percentcorrect > 75)
-            {
-                userPrincipal.NumTestAprobados = userPrincipal.NumTestAprobados + 1;
-                userPrincipal.NumMonedas = userPrincipal.NumMonedas + 20;
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(percentcorrect);
+            return Ok(mers);
 
         }
 
         [HttpGet("test/{testId:int}")]
         public async Task<ActionResult<Test>> GetTestById(int testId)
         {
-            var test = await _context.Tests.FindAsync(testId);
+            var test = await _testService.GetTestById(testId);
+            
             return Ok(test);
         }
 

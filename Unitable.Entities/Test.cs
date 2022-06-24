@@ -10,6 +10,7 @@ namespace Unitable.Entities
     {
         public string Nombre { get; set; }
         public string Descripcion { get; set; }
+        //public double Calificación { get; set; }
 
         public int TemaId { get; set; }
         public Tema Tema { get; set; }

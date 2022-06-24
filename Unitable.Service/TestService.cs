@@ -121,7 +121,7 @@ namespace Unitable.Service
             return resm;
         }
 
-        /*public async Task<List<Boolean>> TestResultado(List<Boolean> request)
+        public async Task<Double> TestResultado(Usuario usuario, List<bool> request)
         {
             int c = 0;
             foreach (Boolean respuesta in request)
@@ -130,23 +130,25 @@ namespace Unitable.Service
             }
 
             double percentcorrect = ((double)c / (double)request.Count()) * 100.00;
-            var userPrincipal = GetUserPrincipal();
 
             if (percentcorrect > 75)
             {
-                userPrincipal.NumTestAprobados = userPrincipal.NumTestAprobados + 1;
-                userPrincipal.NumMonedas = userPrincipal.NumMonedas + 20;
+                usuario.NumTestAprobados = usuario.NumTestAprobados + 1;
+                usuario.NumMonedas = usuario.NumMonedas + 20;
+                usuario.NumActCompletas++;
+                usuario.NumMonedas = usuario.NumMonedas + 30;
             }
 
             await _context.SaveChangesAsync();
-            return Ok(percentcorrect);
-        }*/
+            //var nota = new Test();
+            //nota.Calificación = percentcorrect;
+            return percentcorrect;
+        }
 
-        /*public async Task<List<Test>> GetTestById(int testId)
+        public async Task<Test> GetTestById(int testId)
         {
-            Test test = await _context.Tests.FindAsync(testId);
-
+            var test = await _context.Tests.FindAsync(testId);
             return test;
-        }*/
+        }
     }
 }

@@ -81,6 +81,7 @@ builder.Services.AddScoped<ITemaService, TemaService>();
 builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IPreguntaService, PreguntaService>();
 builder.Services.AddScoped<IRespuestaService, RespuestaService>();
+builder.Services.AddScoped<IRecompensaService, RecompensaService>();
 
 builder.Services.AddCors(options =>
 {

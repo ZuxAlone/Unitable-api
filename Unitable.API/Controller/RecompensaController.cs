@@ -6,6 +6,7 @@ using Unitable.DataAccess;
 using Unitable.Dto.Request;
 using Unitable.Dto.Response;
 using Unitable.Entities;
+using Unitable.Service;
 
 namespace Unitable.API.Controller
 {
@@ -13,73 +14,47 @@ namespace Unitable.API.Controller
     [Route("api/[Controller]")]
     public class RecompensaController : ControllerBase
     {
+        private readonly IRecompensaService _recompensaService;
         private readonly UnitableDbContext _context;
 
-        public RecompensaController(UnitableDbContext context)
+        public RecompensaController(IRecompensaService recompensaService, UnitableDbContext context)
         {
+            _recompensaService = recompensaService;
             _context = context;
         }
 
         [HttpGet]
         public async Task<ActionResult<Recompensa>> Get()
         {
-            var userPrincipal = GetUserPrincipal();
-            var usuario_recompesas = await _context.Usuario_Recompensas.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
+            var recompensas = await _recompensaService.Get();
 
-            List<Recompensa> recompensas = new List<Recompensa>();
-            List<Recompensa> recompensasnot = new List<Recompensa>();
-
-            recompensasnot = _context.Recompensas.ToList();
-
-            foreach (var usuario_recompesa in usuario_recompesas)
-            {
-                recompensas.Add(await _context.Recompensas.FindAsync(usuario_recompesa.RecompensaId));
-            }
-
-            recompensasnot = recompensasnot.Except(recompensas).ToList();
-
-            return Ok(recompensasnot);
+            return Ok(recompensas);
 
         }
 
         [HttpPost]
         public async Task<ActionResult> Post(DtoRecompensa request)
         {
-            var entity = new Recompensa
+            var resm = await _recompensaService.Post(request);
+
+            if (resm.Success)
             {
-                Nombre = request.Nombre,
-                Detalle = request.Detalle,
-                PrecioMon = request.PrecioMon,
-
-                Status = true
-            };
-
-            _context.Recompensas.Add(entity);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Recompensa/{entity.Id}");
-
-            return Ok(entity);
+                var entity = (Recompensa)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Recompensa/{entity.Id}");
+                return Ok(entity);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int RecompensaId)
         {
-            var entity = await _context.Recompensas.FindAsync(RecompensaId);
-
+            var entity = await _recompensaService.Delete(RecompensaId);
 
             if (entity == null) return NotFound();
-
-            foreach (Usuario_Recompensa element in _context.Usuario_Recompensas)
-            {
-                if (element.RecompensaId == RecompensaId)
-                {
-                    _context.Usuario_Recompensas.Remove(element);
-                }
-            }
-
-            _context.Recompensas.Remove(entity);
-            await _context.SaveChangesAsync();
 
             return Ok(entity);
         }
@@ -87,20 +62,18 @@ namespace Unitable.API.Controller
         [HttpPut("{RecompensaId:int}")]
         public async Task<ActionResult> Put(int RecompensaId, DtoRecompensa request)
         {
-            var RecompensaFromDb = await _context.Recompensas.FindAsync(RecompensaId);
+            var resm = await _recompensaService.Put(RecompensaId, request);
 
-            if (RecompensaFromDb == null) return NotFound();
-
-            RecompensaFromDb.Nombre = request.Nombre;
-            RecompensaFromDb.Detalle = request.Detalle;
-            RecompensaFromDb.PrecioMon = request.PrecioMon;
-
-            _context.Recompensas.Update(RecompensaFromDb);
-            await _context.SaveChangesAsync();
-
-            HttpContext.Response.Headers.Add("location", $"/api/Recompensa/{RecompensaFromDb.Id}");
-
-            return Ok(new { Id = RecompensaId });
+            if (resm.Success)
+            {
+                var RecompensaFromDb = (Recompensa)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Recompensa/{RecompensaFromDb.Id}");
+                return Ok(RecompensaFromDb);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpPost("buy/{recompensaId:int}")]
@@ -108,44 +81,28 @@ namespace Unitable.API.Controller
         public async Task<ActionResult<Usuario_Recompensa>> BuyRecompensa(int recompensaId)
         {
             var userPrincipal = GetUserPrincipal();
+            var resm = await _recompensaService.BuyRecompensa(userPrincipal, recompensaId);
 
-            var recompensaDb = await _context.Recompensas.FindAsync(recompensaId);
-
-            if (recompensaDb == null) return NotFound(new { mensaje = "No existe esta recompensa" });
-            if (userPrincipal.NumMonedas < recompensaDb.PrecioMon) return Problem("No tienes monedas suficientes");
-
-            userPrincipal.NumMonedas -= recompensaDb.PrecioMon;
-
-            var usuario_recompensa = new Usuario_Recompensa
+            if (resm.Success)
             {
-                UsuarioId = userPrincipal.Id,
-                RecompensaId = recompensaId,
-                Usuario = userPrincipal,
-                Recompensa = recompensaDb,
-                Status = true
-            };
-
-            _context.Usuario_Recompensas.Add(usuario_recompensa);
-            await _context.SaveChangesAsync();
-
-            return Ok(usuario_recompensa);
+                var entity = (Usuario_Recompensa)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/Recompensa/buy/{recompensaId}");
+                return Ok(entity.Id);
+            }
+            else
+            {
+                return NotFound(resm.Errors);
+            }
         }
 
         [HttpGet("recompesas")]
         [Authorize]
-        public async Task<ActionResult<Usuario>> GetRecompensasByUsuario()
+        public async Task<ActionResult<Recompensa>> GetRecompensasByUsuario()
         {
             var userPrincipal = GetUserPrincipal();
-            var usuario_recompesas =await _context.Usuario_Recompensas.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
+            var usuario_recompesas =await _recompensaService.GetRecompensasByUsuario(userPrincipal);
 
-            List<Recompensa> recompensas = new List<Recompensa>();
-
-            foreach(var usuario_recompesa in usuario_recompesas)
-            {
-                recompensas.Add(await _context.Recompensas.FindAsync(usuario_recompesa.RecompensaId));
-            }
-
-            return Ok(recompensas);
+            return Ok(usuario_recompesas);
 
         }
 

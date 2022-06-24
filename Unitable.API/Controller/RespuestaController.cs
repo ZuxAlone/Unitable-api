@@ -77,51 +77,8 @@ namespace Unitable.API.Controller
         [HttpGet("respuestas/{preguntaId:int}")]
         public async Task<ActionResult> GetRespuestasByPregunta(int preguntaId)
         {
-            var todas_respuestas_pregunta = await _context.Respuestas.Where(us => (us.PreguntaId == preguntaId)).ToListAsync();
-            List<Respuesta> respuestas_test = new();
-            var correcta = todas_respuestas_pregunta.FindAll(us => us.IsCorrect == true);
-
-            if(correcta.Count == 0)
-            {
-                return Problem("No hay ninguna respuesta correcta para esta pregunta, ingrese una.");
-            }
-
-            respuestas_test.Add(correcta[0]);
-            if (todas_respuestas_pregunta.Count > 0)
-            {
-                if (todas_respuestas_pregunta.Count > 5)
-                {
-                    Random randomm = new Random();
-                    int r = (randomm.Next(0, todas_respuestas_pregunta.Count));
-                    var respuesta = todas_respuestas_pregunta[r];
-
-                    while (respuestas_test.Count < 5)
-                    {
-                        var temp = respuestas_test.FindAll(us => us.Id == respuesta.Id);
-                        if (temp.Count == 0)
-                        {
-                            respuestas_test.Add(respuesta);
-                            r = (randomm.Next(0, todas_respuestas_pregunta.Count));
-                            respuesta = todas_respuestas_pregunta[r];
-                        }
-                        else
-                        {
-                            r = (randomm.Next(0, todas_respuestas_pregunta.Count));
-                            respuesta = todas_respuestas_pregunta[r];
-                        }
-                }
-                }
-                else
-                {
-                    respuestas_test = todas_respuestas_pregunta;
-                }
-
-                return Ok(respuestas_test);
-            }
-            else
-            {
-                return Problem("No hay respuestas para esta pregunta");
-            }
+            var todas_respuestas_pregunta = await _respuestaService.GetRespuestasByPregunta(preguntaId);
+            return Ok(todas_respuestas_pregunta);
         }
     }
 }

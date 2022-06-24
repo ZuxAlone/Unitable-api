@@ -15,6 +15,6 @@ namespace Unitable.Service
         Task<BaseResponseGeneric<Pregunta>> Post(DtoPregunta request);
         Task<Pregunta> Delete(int PreguntaId);
         Task<BaseResponseGeneric<Pregunta>> Put(int PreguntaId, DtoPregunta request);
-        /*Task<List<Pregunta>> GetPreguntasByTest(int testId);*/
+        Task<List<Pregunta>> GetPreguntasByTest(int testId);
     }
 }

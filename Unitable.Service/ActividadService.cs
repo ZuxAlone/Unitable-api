@@ -274,14 +274,10 @@ namespace Unitable.Service
 
             var test = tests[r];
 
-            userPrincipal.NumActCompletas = userPrincipal.NumActCompletas + 1;
-            userPrincipal.NumMonedas = userPrincipal.NumMonedas + 30;
-
             await _context.SaveChangesAsync();
 
             res.Success = true;
             res.Result = test;
-
             return res;
         }
 

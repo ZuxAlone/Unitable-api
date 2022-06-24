@@ -16,7 +16,7 @@ namespace Unitable.Service
         Task<BaseResponseGeneric<Test>> Post(DtoTest request);
         Task<Test> Delete(int TestId);
         Task<BaseResponseGeneric<Test>> Put(int TestId, DtoTest request);
-        /*Task<List<Boolean>> TestResultado(List<Boolean> request);*/
-        /*Task<List<Test>> GetTestById(int testId);*/
+        Task<Double> TestResultado(Usuario usuario, List<Boolean> request);
+        Task<Test> GetTestById(int testId);
     }
 }

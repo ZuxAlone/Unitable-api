@@ -119,9 +119,53 @@ namespace Unitable.Service
             return resm;
         }
 
-        /*public async Task<List<Respuesta>> GetRespuestasByPregunta(int preguntaId)
+        public async Task<List<Respuesta>> GetRespuestasByPregunta(int preguntaId)
         {
-            throw new NotImplementedException();
-        }*/
+            var todas_respuestas_pregunta = await _context.Respuestas.Where(us => (us.PreguntaId == preguntaId)).ToListAsync();
+            List<Respuesta> respuestas_test = new();
+            var correcta = todas_respuestas_pregunta.FindAll(us => us.IsCorrect == true);
+
+            if (correcta.Count == 0)
+            {
+                return null;
+            }
+
+            respuestas_test.Add(correcta[0]);
+            if (todas_respuestas_pregunta.Count > 0)
+            {
+                if (todas_respuestas_pregunta.Count > 5)
+                {
+                    Random randomm = new Random();
+                    int r = (randomm.Next(0, todas_respuestas_pregunta.Count));
+                    var respuesta = todas_respuestas_pregunta[r];
+
+                    while (respuestas_test.Count < 5)
+                    {
+                        var temp = respuestas_test.FindAll(us => us.Id == respuesta.Id);
+                        if (temp.Count == 0)
+                        {
+                            respuestas_test.Add(respuesta);
+                            r = (randomm.Next(0, todas_respuestas_pregunta.Count));
+                            respuesta = todas_respuestas_pregunta[r];
+                        }
+                        else
+                        {
+                            r = (randomm.Next(0, todas_respuestas_pregunta.Count));
+                            respuesta = todas_respuestas_pregunta[r];
+                        }
+                    }
+                }
+                else
+                {
+                    respuestas_test = todas_respuestas_pregunta;
+                }
+
+                return respuestas_test;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

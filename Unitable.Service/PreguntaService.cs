@@ -117,9 +117,46 @@ namespace Unitable.Service
             return resm;
         }
 
-        /*public async Task<List<Pregunta>> GetPreguntasByTest(int testId)
+        public async Task<List<Pregunta>> GetPreguntasByTest(int testId)
         {
-            throw new NotImplementedException();
-        }*/
+            var todas_preguntas_test = await _context.Preguntas.Where(us => (us.TestId == testId)).ToListAsync();
+            List<Pregunta> preguntas_test = new();
+
+            if (todas_preguntas_test.Count > 0)
+            {
+                if (todas_preguntas_test.Count > 5)
+                {
+                    Random randomm = new Random();
+                    int r = (randomm.Next(0, todas_preguntas_test.Count));
+                    var pregunta = todas_preguntas_test[r];
+
+                    while (preguntas_test.Count < 5)
+                    {
+                        var temp = preguntas_test.FindAll(us => us.Id == pregunta.Id);
+                        if (temp.Count == 0)
+                        {
+                            preguntas_test.Add(pregunta);
+                            r = (randomm.Next(0, todas_preguntas_test.Count));
+                            pregunta = todas_preguntas_test[r];
+                        }
+                        else
+                        {
+                            r = (randomm.Next(0, todas_preguntas_test.Count));
+                            pregunta = todas_preguntas_test[r];
+                        }
+                    }
+                }
+                else
+                {
+                    preguntas_test = todas_preguntas_test;
+                }
+
+                return preguntas_test;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }
