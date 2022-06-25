@@ -109,5 +109,61 @@ namespace Unitable.Service
                 mensaje = "Usuario Eliminado"
             };
         }
+
+        public async Task<List<Usuario>> GetFollowedUsuarios(Usuario userPrincipal)
+        {
+            List<Usuario> followedUsuarios = new List<Usuario>();
+            var usuario_follows = await _context.Usuario_Follows.Where(us_fo => us_fo.UsuarioPrincId == userPrincipal.Id).ToListAsync();
+            foreach (var usuario_follow in usuario_follows)
+            {
+                var usuario = await _context.Usuarios.FindAsync(usuario_follow.UsuarioFollowId);
+                followedUsuarios.Add(usuario);
+            }
+            return followedUsuarios;
+        }
+
+        public async Task<List<Usuario>> GetOtherUsuarios(Usuario userPrincipal)
+        {
+            var usuarios = await _context.Usuarios.Where(us => us.Id != userPrincipal.Id).ToListAsync();
+            var usuario_follows = await _context.Usuario_Follows.Where(us_fo => us_fo.UsuarioPrincId == userPrincipal.Id).ToListAsync();
+            foreach (var usuario_follow in usuario_follows)
+            {
+                var usuario = await _context.Usuarios.FindAsync(usuario_follow.UsuarioFollowId);
+                usuarios.Remove(usuario);
+            }
+            return usuarios;
+        }
+
+        public async Task<object> FollowUsuario(Usuario userPrincipal, int followedUsuarioId)
+        {
+            var usuario_Follow = await _context.Usuario_Follows.FirstOrDefaultAsync(us_fo => (
+                us_fo.UsuarioPrincId == userPrincipal.Id && us_fo.UsuarioFollowId == followedUsuarioId
+            ));
+
+            if (usuario_Follow == null)
+            {
+                var usuario_follow_entity = new Usuario_Follow
+                {
+                    UsuarioPrincId = userPrincipal.Id,
+                    UsuarioFollowId = followedUsuarioId
+                };
+
+                await _context.Usuario_Follows.AddAsync(usuario_follow_entity);
+                await _context.SaveChangesAsync();
+                return new
+                {
+                    usuario_follow = usuario_follow_entity,
+                    mensaje = "Has seguido a un usuario."
+                };
+            }
+
+            _context.Usuario_Follows.Remove(usuario_Follow);
+            await _context.SaveChangesAsync();
+            return new
+            {
+                usuario_unfollow = usuario_Follow,
+                mensaje = "Dejaste de seguir a un usuario."
+            };
+        }
     }
 }

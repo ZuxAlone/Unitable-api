@@ -48,7 +48,7 @@ namespace Unitable.API.Controller
 
         [HttpGet("usuarios/")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetOtherUsuarios()
+        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
         {
             var userPrincipal = GetUserPrincipal();
             var usuarios = await _usuarioService.GetUsuarios(userPrincipal);
@@ -79,6 +79,33 @@ namespace Unitable.API.Controller
         {
             var userPrincipal = GetUserPrincipal();
             var response = await _usuarioService.DeleteUsuario(userPrincipal);
+            return Ok(response);
+        }
+
+        [HttpGet("followed/")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Usuario>>> GetFollowedUsuarios()
+        {
+            var userPrincipal = GetUserPrincipal();
+            var response = await _usuarioService.GetFollowedUsuarios(userPrincipal);
+            return Ok(response);
+        }
+
+        [HttpGet("others/")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Usuario>>> GetOtherUsuarios()
+        {
+            var userPrincipal = GetUserPrincipal();
+            var response = await _usuarioService.GetOtherUsuarios(userPrincipal);
+            return Ok(response);
+        }
+
+        [HttpPut("follow/{followedId:int}")]
+        [Authorize]
+        public async Task<ActionResult> FollowUsuario(int followedId)
+        {
+            var userPrincipal = GetUserPrincipal();
+            var response = await _usuarioService.FollowUsuario(userPrincipal, followedId);
             return Ok(response);
         }
 

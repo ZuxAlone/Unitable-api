@@ -16,5 +16,8 @@ namespace Unitable.Service
         Task<Usuario> EditUsuario(Usuario userPrincipal, DtoEditUsuario request);
         Task<object> GetPremium(Usuario userPrincipal);
         Task<object> DeleteUsuario(Usuario userPrincipal);
+        Task<List<Usuario>> GetFollowedUsuarios(Usuario userPrincipal);
+        Task<List<Usuario>> GetOtherUsuarios(Usuario userPrincipal);
+        Task<object> FollowUsuario(Usuario userPrincipal, int followedUsuarioId);
     }
 }
