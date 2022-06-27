@@ -176,5 +176,30 @@ namespace Unitable.Service
 
             return recompensas;
         }
+
+        public async Task<Usuario_Recompensa> DeleteOfUsuario(int RecompensaId)
+        {
+            var entity = await _context.Usuario_Recompensas.FindAsync(RecompensaId);
+
+            if (entity != null)
+            {
+                foreach (Usuario_Recompensa element in _context.Usuario_Recompensas)
+                {
+                    if (element.RecompensaId == RecompensaId)
+                    {
+                        _context.Usuario_Recompensas.Remove(element);
+                    }
+                }
+
+                _context.Usuario_Recompensas.Remove(entity);
+                await _context.SaveChangesAsync();
+                return entity;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
     }
 }

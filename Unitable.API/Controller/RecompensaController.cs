@@ -51,7 +51,7 @@ namespace Unitable.API.Controller
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("{RecompensaId:int}")]
         public async Task<ActionResult> Delete(int RecompensaId)
         {
             var entity = await _recompensaService.Delete(RecompensaId);
@@ -97,7 +97,7 @@ namespace Unitable.API.Controller
             }
         }
 
-        [HttpGet("recompesas")]
+        [HttpGet("recompensas")]
         [Authorize]
         public async Task<ActionResult<Recompensa>> GetRecompensasByUsuario()
         {
@@ -106,6 +106,16 @@ namespace Unitable.API.Controller
 
             return Ok(usuario_recompesas);
 
+        }
+
+        [HttpDelete("recompensas/{RecompensaId:int}")]
+        public async Task<ActionResult> DeleteOfUsuario(int RecompensaId)
+        {
+            var entity = await _recompensaService.DeleteOfUsuario(RecompensaId);
+
+            if (entity == null) return NotFound();
+
+            return Ok(entity);
         }
 
         private Usuario GetUserPrincipal()
