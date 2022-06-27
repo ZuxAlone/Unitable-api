@@ -15,9 +15,8 @@ namespace Unitable.Service
             _context = context;
         }
 
-        public async Task<List<Recompensa>> Get()
+        public async Task<List<Recompensa>> Get(Usuario userPrincipal)
         {
-            Usuario userPrincipal = new Usuario();
             var usuario_recompesas = await _context.Usuario_Recompensas.Where(us => (us.UsuarioId == userPrincipal.Id)).ToListAsync();
 
             List<Recompensa> recompensas = new List<Recompensa>();

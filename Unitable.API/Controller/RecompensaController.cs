@@ -24,9 +24,11 @@ namespace Unitable.API.Controller
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<Recompensa>> Get()
         {
-            var recompensas = await _recompensaService.Get();
+            var userPrincipal = GetUserPrincipal();
+            var recompensas = await _recompensaService.Get(userPrincipal);
 
             return Ok(recompensas);
 

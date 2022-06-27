@@ -11,7 +11,7 @@ namespace Unitable.Service
 {
     public interface IRecompensaService
     {
-        Task<List<Recompensa>> Get();
+        Task<List<Recompensa>> Get(Usuario userPrincipal);
         Task<BaseResponseGeneric<Recompensa>> Post(DtoRecompensa request);
         Task<Recompensa> Delete(int RecompensaId);
         Task<BaseResponseGeneric<Recompensa>> Put(int RecompensaId, DtoRecompensa request);
