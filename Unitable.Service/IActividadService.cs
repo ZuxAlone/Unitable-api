@@ -10,7 +10,8 @@ namespace Unitable.Service
         Task<BaseResponseGeneric<Actividad>> Post(Usuario userPrincipal, DtoActividad request);
         Task<Actividad> Delete(int actividadId);
         Task<BaseResponseGeneric<Actividad>> Put(int actividadId, DtoActividad request);
-        Task<BaseResponseGeneric<Test>> Finish(Usuario userPrincipal, int actividadId);
+        Task<BaseResponseGeneric<Test>> GoToTest(Usuario userPrincipal, int actividadId);
+        Task<BaseResponseGeneric<Actividad>> Finish(Usuario userPrincipal, int actividadId, bool verificar);
         Task<List<Actividad>> GetActividadesByUsuario(Usuario userPrincipal);
     }
 }

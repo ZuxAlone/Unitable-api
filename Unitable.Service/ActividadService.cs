@@ -251,7 +251,7 @@ namespace Unitable.Service
             }
         }
 
-        public async Task<BaseResponseGeneric<Test>> Finish(Usuario userPrincipal, int actividadId)
+        public async Task<BaseResponseGeneric<Test>> GoToTest(Usuario userPrincipal, int actividadId)
         {
             var res = new BaseResponseGeneric<Test>();
             var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
@@ -262,9 +262,9 @@ namespace Unitable.Service
                 return res;
             }
 
-            actividadFromDb.Activa = false;
+            /*actividadFromDb.Activa = false;
 
-            _context.Actividades.Update(actividadFromDb);
+            _context.Actividades.Update(actividadFromDb);*/
 
             var tests = await _context.Tests.Where(us => (us.TemaId == actividadFromDb.TemaId)).ToListAsync();
 
@@ -279,6 +279,38 @@ namespace Unitable.Service
             res.Success = true;
             res.Result = test;
             return res;
+        }
+
+        public async Task<BaseResponseGeneric<Actividad>> Finish(Usuario userPrincipal, int actividadId, bool verificar)
+        {
+            var res = new BaseResponseGeneric<Actividad>();
+            var actividadFromDb = await _context.Actividades.FindAsync(actividadId);
+
+            if (actividadFromDb == null)
+            {
+                res.Success = false;
+                res.Errors.Add("El valor no esta definido");
+                return res;
+            }
+
+            if (verificar == true)
+            {
+                actividadFromDb.Activa = false;
+                _context.Actividades.Update(actividadFromDb);
+
+                await _context.SaveChangesAsync();
+
+                res.Success = true;
+                res.Result = actividadFromDb;
+                return res;
+            }
+            else
+            {
+                res.Success = false;
+                res.Errors.Add("No aprobaste el test");
+                return res;
+            }
+
         }
 
         public async Task<List<Actividad>> GetActividadesByUsuario(Usuario userPrincipal)

@@ -80,12 +80,12 @@ namespace Unitable.API.Controller
             }
         }
 
-        [HttpPut("finish/{actividadId:int}")]
+        [HttpPut("test/{actividadId:int}")]
         [Authorize]
-        public async Task<ActionResult> Finish(int actividadId)
+        public async Task<ActionResult> GoToTest(int actividadId)
         {
             var userPrincipal = GetUserPrincipal();
-            var resm = await _actividadService.Finish(userPrincipal, actividadId);
+            var resm = await _actividadService.GoToTest(userPrincipal, actividadId);
 
             if (resm.Success)
             {
@@ -96,6 +96,25 @@ namespace Unitable.API.Controller
             else
             {
                 return NotFound(resm.Errors);
+            }
+        }
+
+        [HttpPut("finish/{actividadId:int}")]
+        [Authorize]
+        public async Task<ActionResult> Finish(int actividadId, bool verificar)
+        {
+            var userPrincipal = GetUserPrincipal();
+            var resm = await _actividadService.Finish(userPrincipal, actividadId, verificar);
+
+            if (resm.Success)
+            {
+                var entity = (Actividad)resm.Result;
+                HttpContext.Response.Headers.Add("location", $"/api/actividad/{actividadId}");
+                return Ok(entity);
+            }
+            else
+            {
+                return Ok(null);
             }
         }
 
