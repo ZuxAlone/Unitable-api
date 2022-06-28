@@ -17,6 +17,6 @@ namespace Unitable.Service
         Task<BaseResponseGeneric<Recompensa>> Put(int RecompensaId, DtoRecompensa request);
         Task<BaseResponseGeneric<Usuario_Recompensa>> BuyRecompensa(Usuario userPrincipal, int recompensaId);
         Task<List<Recompensa>> GetRecompensasByUsuario(Usuario userPrincipal);
-        Task<Usuario_Recompensa> DeleteOfUsuario(int RecompensaId);
+        Task<Usuario_Recompensa> DeleteOfUsuario(Usuario userPrincipal, int RecompensaId);
     }
 }
