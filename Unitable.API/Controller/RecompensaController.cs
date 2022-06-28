@@ -93,7 +93,7 @@ namespace Unitable.API.Controller
             }
             else
             {
-                return NotFound(resm.Errors);
+                return null;
             }
         }
 
@@ -111,7 +111,8 @@ namespace Unitable.API.Controller
         [HttpDelete("recompensas/{RecompensaId:int}")]
         public async Task<ActionResult> DeleteOfUsuario(int RecompensaId)
         {
-            var entity = await _recompensaService.DeleteOfUsuario(RecompensaId);
+            var userPrincipal = GetUserPrincipal();
+            var entity = await _recompensaService.DeleteOfUsuario(userPrincipal, RecompensaId);
 
             if (entity == null) return NotFound();
 
