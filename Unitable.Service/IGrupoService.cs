@@ -13,6 +13,7 @@ namespace Unitable.Service
         Task<ICollection<Grupo>> Get(Usuario userPrincipal);
         Task<ICollection<Grupo>> GetOthers(Usuario userPrincipal);
         Task<Grupo> GetById(int grupoId);
+        Task<Grupo> CanCreate(string request);
         Task<Grupo> Post(Usuario userPrincipal, DtoGrupo request);
         Task<Grupo> Delete(int GrupoId);
         Task<Usuario_Grupo> JoinGrupo(Usuario userPrincipal, int GrupoId);

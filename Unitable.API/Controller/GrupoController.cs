@@ -23,6 +23,16 @@ namespace Unitable.API.Controller
             _context = context;
         }
 
+        [HttpGet("exists")]
+        [Authorize]
+        public async Task<ActionResult> Exists(string request)
+        {
+            var exists = await _grupoService.CanCreate(request);
+            if(exists != null)
+                return Ok(true);
+            return Ok(false);
+        }
+
         [HttpGet]
         [Authorize]
         public async Task<ActionResult<ICollection<Grupo>>> Get()
@@ -57,6 +67,9 @@ namespace Unitable.API.Controller
         {
             var userPrincipal = GetUserPrincipal();
             var entity = await _grupoService.Post(userPrincipal, request);
+
+            if (entity == null)
+                return BadRequest("Error al crear el Grupo \"" + request.Nombre + "\"");
 
             HttpContext.Response.Headers.Add("location", $"/api/Grupo/{entity.Id}");
 

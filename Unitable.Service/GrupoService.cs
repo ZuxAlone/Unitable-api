@@ -87,9 +87,21 @@ namespace Unitable.Service
             return usuarioGrupo;
         }
 
+        public async Task<Grupo> CanCreate(string request)
+        {
+            var grupo = await _context.Grupos.FirstOrDefaultAsync( gr => gr.Nombre.ToUpper().CompareTo(request.ToUpper()) == 0);
+            
+            return grupo;
+        }
+
         public async Task<Grupo> Post(Usuario userPrincipal, DtoGrupo request)
         {
             var TemaFromDb = await _context.Temas.FindAsync(request.TemaId);
+
+            var gruposTest = await _context.Grupos.Where(gr => gr.Nombre.ToUpper().CompareTo(request.Nombre.ToUpper()) == 0).ToListAsync();
+
+            if (gruposTest.Count > 0)
+                return null;
 
             var entityChat = new Chat
             {
